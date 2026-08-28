@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme Colors -->
+    <color name="dark_navy">#0A0E1A</color>
+    <color name="dark_gray">#1A1F2E</color>
+    <color name="divider_dark">#2C3A4A</color>
+    <color name="accent_blue">#4FC3F7</color>
+
+    <!-- Status Color -->
+    <color name="status_green">#4CAF50</color>
+    <color name="status_yellow">#FFB300</color>
+    <color name="status_red">#EF5350</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Text Color -->
+    <color name="white">#FFFFFF</color>
+    <color name="text_primary">##FFFFFF</color>
+    <color name="text_secondary">#B0BEC5</color>
+</resources>

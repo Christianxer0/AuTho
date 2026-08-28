@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 1. Dark App Icon Background -->
+    <path
+        android:fillColor="#0F172A"
+        android:pathData="M54,0 C24,0 0,24 0,54 C0,84 24,108 54,108 C84,108 108,84 108,54 C108,24 84,0 54,0 Z" />
+
+    <!-- 2. Android Robot Head Outline (Gold - represents "Au") -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="2.5"
+        android:strokeLineJoin="round"
+        android:pathData="M54,15 L15,30 L15,57 C15,81 31.5,102 54,108 C76.5,102 93,81 93,57 L93,30 Z" />
+
+    <!-- 3. Robot Antennae (Gold) -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M45,12 L45,18 M63,12 L63,18" />
+
+    <!-- 4. "Au" - Gold Chemical Symbol (Bold, capital A + lowercase u) -->
+    <!-- Letter "A" -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M13,65 L21,35 L29,65" />
+    <!-- Crossbar of "A" -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M16,54 L26,54" />
+    <!-- Letter "u" (lowercase) -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M37,45 L37,56 C37,62 43,62 43,56 L43,45" />
+
+    <!-- 5. "Tho" - Android Green (Authority / Tech) -->
+    <!-- Letter "T" -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#3DDC84"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M53,35 L68,35 M60.5,35 L60.5,65" />
+    <!-- Letter "h" (lowercase) -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#3DDC84"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M75,35 L75,56 C75,62 81,62 81,56 L81,45" />
+    <!-- Letter "o" (lowercase) -->
+    <path
+        android:fillColor="none"
+        android:strokeColor="#3DDC84"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M89,45 L89,56 C89,63 97,63 97,56 L97,45 C97,38 89,38 89,45" />
+
+</vector>

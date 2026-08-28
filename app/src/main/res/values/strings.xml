@@ -1,0 +1,39 @@
+<resources>
+    <string name="app_name">AuTho</string>
+    <string name="app_description">Authority Total System</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">AuTho</string>
+    <string name="login_tagline">Control.Secure.Optimize.</string>
+    <string name="login_username_hint">Email or Username</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_button">LOGIN</string>
+    <string name="login_remember_me">Remember Me</string>
+    <string name="login_forgot_password">Forgot Password</string>
+    <string name="login_or">OR</string>
+    <string name="login_fingerprint">Use Fingerprint</string>
+    <string name="login_setup_biometric">Enable Fingerprint Login</string>
+    <string name="login_dont_have_account">Don\'t have an account?</string>
+    <string name="login_sign_up">Sign Up</string>
+
+    <!-- Registration Screen -->
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join Autho community</string>
+    <string name="register_username_hint">Username</string>
+    <string name="register_email_hint">Email</string>
+    <string name="register_password_hint">Password</string>
+    <string name="register_confirm_password_hint">Confirm Password</string>
+    <string name="register_pin_hint">Security PIN (4-6 digits)</string>
+    <string name="register_biometric">Enable Fingerprint Login</string>
+    <string name="register_biometric_info">Enable fingerprint for faster login</string>
+    <string name="register_button">SIGN UP</string>
+    <string name="register_have_account">Already have an acoount?</string>
+    <string name="register_login">Login</string>
+
+    <!-- App name (was hardcoded) -->
+    <string name="app_name">AuTho</string>
+    <!-- Biometric status (was hardcoded) -->
+    <string name="biometric_status_ready">Fingerprint Ready</string>
+    <!-- Content description for logo -->
+    <string name="app_logo_description">App logo</string>
+</resources>
