@@ -83,6 +83,106 @@ public class UserDatabase extends SQLiteOpenHelper{
     }
 
     //Generate random salt
+    public static String generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        StringBuilder hexString = new StringBuilder();
+
+        for(byte b: salt){
+            String hex = Integer.toHexString(0xff & b);
+            if(hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+    //Register new User
+    public boolean registerUser(User user, String password) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+
+        String salt = generateSalt();
+        String passwordHash = hashPassword(password, salt);
+
+        values.put(COLUMN_USERNAME, user.getUsername());
+        values.put(COLUMN_EMAIL, user.getEmail());
+        values.put(COLUMN_PASSWORD_HASH, passwordHash);
+        values.put(COLUMN_SALT, salt);
+        values.put(COLUMN_BIOMETRIC_ENABLED, user.isBiometricEnabled() ? 1:0);
+
+        long result = db.insert(TABLE_USERS, null, values);
+        db.close();
+        return result != -1;
+    }
+
+    //Login User
+    public User loginUser(String usernameOrEmail, String password) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_USERS +
+                " WHERE " + COLUMN_USERNAME + " = ? OR " + COLUMN_EMAIL + " = ?";
+
+        Cursor cursor = null;
+        try {
+
+            cursor = db.rawQuery(query, new String[]{usernameOrEmail, usernameOrEmail});
+
+            if (cursor.moveToFirst()) {
+
+                int idIdx = cursor.getColumnIndex(COLUMN_ID);
+                int userIdx = cursor.getColumnIndex(COLUMN_USERNAME);
+                int emailIdx = cursor.getColumnIndex(COLUMN_EMAIL);
+                int hashIdx = cursor.getColumnIndex(COLUMN_PASSWORD_HASH);
+                int saltIdx = cursor.getColumnIndex(COLUMN_SALT);
+                int bioIdx = cursor.getColumnIndex(COLUMN_BIOMETRIC_ENABLED);
+
+
+                if (hashIdx == -1 || saltIdx == -1 || userIdx == -1 || emailIdx == -1 || idIdx == -1 || bioIdx == -1) {
+
+                    return null;
+                }
+
+                String storedHash = cursor.getString(hashIdx);
+                String salt = cursor.getString(saltIdx);
+
+                String calculatedHash = hashPassword(password, salt);
+
+                if (calculatedHash != null && calculatedHash.equals(storedHash)) {
+                    User user = new User();
+                    user.setId(cursor.getInt(idIdx));
+                    user.setUsername(cursor.getString(userIdx));
+                    user.setEmail(cursor.getString(emailIdx));
+                    user.setBiometricEnabled(cursor.getInt(bioIdx) == 1);
+                    user.setAuthenticated(true);
+                    return user;
+                }
+            }
+            return null;
+        } finally {
+
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    //Set Pin
+    public boolean setPin(int userId, String pin){
+        SQLiteDatabase db = this.getWritableDatabase();
+        String salt = generateSalt();
+        String pinHash = hashPassword(pin, salt);
+
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_PIN_HASH, pinHash);
+        values.put(COLUMN_PIN_SALT, salt);
+
+        int result = db.update(TABLE_USERS, values, COLUMN_ID + "=?",
+                new String[]{String.valueOf(userId)});
+        db.close();
+        return result > 0;
+    }
+
+    //Verify PIN
 
 
 }

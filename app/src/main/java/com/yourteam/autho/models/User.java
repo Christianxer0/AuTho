@@ -13,10 +13,11 @@ public class User {
     private String sessionToken;
     private boolean isAuthenticated;
 
-    private User() {
+    public User() {
+
     }
 
-    private User(String username, String email, String passwordHash, String Salt, String createdAt, String lastLogin, String sessionToken) {
+    public User(String username, String email, String passwordHash, String Salt, String createdAt, String lastLogin, String sessionToken) {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
