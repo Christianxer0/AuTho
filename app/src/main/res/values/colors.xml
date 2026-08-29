@@ -9,8 +9,6 @@
     <!-- Status Color -->
     <color name="status_green">#4CAF50</color>
     <color name="status_yellow">#FFB300</color>
-    <color name="status_red">#EF5350</color>
-    <color name="white">#FFFFFF</color>
 
     <!-- Text Color -->
     <color name="white">#FFFFFF</color>

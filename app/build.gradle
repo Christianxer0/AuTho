@@ -2,13 +2,15 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+group = "com.example.test"
+
 android {
-    namespace 'com.example.test'          // ✅ change to match your package
-    compileSdk 36                         // ✅ fixed – just an integer
+    namespace 'com.example.test'
+    compileSdk 36
 
     defaultConfig {
-        applicationId "com.example.test"  // ✅ match your package
-        minSdk 24
+        applicationId "com.example.test"
+        minSdk 30
         targetSdk 36
         versionCode 1
         versionName "1.0"
@@ -30,27 +32,26 @@ android {
 }
 
 dependencies {
-    implementation libs.activity.ktx
     implementation libs.appcompat
     implementation libs.constraintlayout
-    implementation libs.firebase.firestore
     implementation libs.material
-    testImplementation libs.junit
-    androidTestImplementation libs.espresso.core
-    androidTestImplementation libs.ext.junit
+    implementation libs.activity.ktx   // change to libs.activity if this is a pure Java project
 
-    // Biometric Authentication
+    // Firebase
+    implementation libs.firebase.firestore
+
+    // Biometric (minSdk 30 means no legacy FingerprintManagerCompat needed)
     implementation 'androidx.biometric:biometric:1.1.0'
 
-    // Room Database
+    // Room
     implementation 'androidx.room:room-runtime:2.6.0'
-    annotationProcessor 'androidx.room:room-compiler:2.6.0'   // ✅ fixed
+    annotationProcessor 'androidx.room:room-compiler:2.6.0'
 
-    // Security
+    // Encrypted SharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 
-    // Testing
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'   // ✅ fixed
+    // Tests (using version catalog — removed duplicate hard-coded versions)
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
 }
