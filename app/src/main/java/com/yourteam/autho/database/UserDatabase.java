@@ -182,7 +182,76 @@ public class UserDatabase extends SQLiteOpenHelper{
         return result > 0;
     }
 
-    //Verify PIN
+    //Verify Pin
+    public boolean verifyPin(int userId, String pin) {
+        if (pin == null) return false;  // extra safety
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT " + COLUMN_PIN_HASH + ", " + COLUMN_PIN_SALT +
+                " FROM " + TABLE_USERS + " WHERE " + COLUMN_ID + " = ?";
+
+        try (Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(userId)})) {
+            // try‑with‑resources (API 33+) – automatically closes cursor
+
+            if (cursor.moveToFirst()) {
+                int hashIdx = cursor.getColumnIndexOrThrow(COLUMN_PIN_HASH);
+                int saltIdx = cursor.getColumnIndexOrThrow(COLUMN_PIN_SALT);
+
+                String storedPinHash = cursor.getString(hashIdx);
+                String pinSalt = cursor.getString(saltIdx);
+
+                if (storedPinHash == null || pinSalt == null) return false;
+
+                String calculatedPinHash = hashPassword(pin, pinSalt);
+                return calculatedPinHash != null && calculatedPinHash.equals(storedPinHash);
+            }
+            return false;
+        }
+    }
+
+    //Check if user exist
+    public boolean userExists(String username, String email) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_USERS +
+                " WHERE " + COLUMN_USERNAME + " = ? OR " + COLUMN_EMAIL + " = ?";
+        Cursor cursor = db.rawQuery(query, new String[]{username, email});
+        boolean exists = cursor.getCount() > 0;
+        cursor.close();
+        db.close();
+        return exists;
+    }
+
+    // Update last login
+    public void updateLastLogin(int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_LAST_LOGIN, String.valueOf(System.currentTimeMillis()));
+        db.update(TABLE_USERS, values, COLUMN_ID + " = ?",
+                new String[]{String.valueOf(userId)});
+        db.close();
+    }
+
+    // Save session token
+    public void saveSessionToken(int userId, String token) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_SESSION_TOKEN, token);
+        values.put(COLUMN_IS_AUTHENTICATED, 1);
+        db.update(TABLE_USERS, values, COLUMN_ID + " = ?",
+                new String[]{String.valueOf(userId)});
+        db.close();
+    }
+
+    // Logout user
+    public void logoutUser(int userId) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_SESSION_TOKEN, (String) null);
+        values.put(COLUMN_IS_AUTHENTICATED, 0);
+        db.update(TABLE_USERS, values, COLUMN_ID + " = ?",
+                new String[]{String.valueOf(userId)});
+        db.close();
+    }
 
 
 }
