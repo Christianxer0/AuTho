@@ -2,14 +2,12 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
-group = "com.example.test"
-
 android {
-    namespace 'com.example.test'
+    namespace 'com.yourteam.autho'
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.example.test"
+        applicationId "com.yourteam.autho"
         minSdk 30
         targetSdk 36
         versionCode 1
@@ -32,15 +30,16 @@ android {
 }
 
 dependencies {
+    // Core UI
+    implementation 'androidx.activity:activity:1.9.0'
     implementation libs.appcompat
     implementation libs.constraintlayout
     implementation libs.material
-    implementation libs.activity.ktx   // change to libs.activity if this is a pure Java project
 
     // Firebase
     implementation libs.firebase.firestore
 
-    // Biometric (minSdk 30 means no legacy FingerprintManagerCompat needed)
+    // Biometric
     implementation 'androidx.biometric:biometric:1.1.0'
 
     // Room
@@ -50,7 +49,7 @@ dependencies {
     // Encrypted SharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 
-    // Tests (using version catalog — removed duplicate hard-coded versions)
+    // Tests
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

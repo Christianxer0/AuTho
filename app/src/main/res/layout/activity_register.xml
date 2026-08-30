@@ -11,26 +11,30 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingBottom="32dp"
         android:gravity="center"
-        android:layout_marginTop="20dp"
-        android:maxWidth="400dp"
         android:layout_gravity="center_horizontal">
 
         <!-- Back Button -->
-        <ImageView
+        <ImageButton
             android:id="@+id/ivBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:src="@drawable/ic_back"
             android:layout_gravity="start"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="@string/back_button_description" />
+            android:layout_marginBottom="12dp"
+            android:contentDescription="@string/register_back"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="12dp"
+            android:scaleType="fitCenter" />
 
         <!-- App Icon -->
         <ImageView
             android:id="@+id/ivLogo"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
             android:src="@drawable/ic_autho_logo"
             android:layout_marginBottom="8dp"
             android:contentDescription="@string/app_logo_description" />
@@ -53,7 +57,7 @@
             android:text="@string/register_subtitle"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="20dp" />
 
         <!-- Username input -->
         <com.google.android.material.textfield.TextInputLayout
@@ -65,7 +69,7 @@
             app:boxBackgroundColor="@color/dark_gray"
             app:boxStrokeColor="@color/divider_dark"
             app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
@@ -91,7 +95,7 @@
             app:boxBackgroundColor="@color/dark_gray"
             app:boxStrokeColor="@color/divider_dark"
             app:hintTextColor="@color/text_secondary"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
@@ -119,7 +123,7 @@
             app:hintTextColor="@color/text_secondary"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/text_secondary"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
@@ -147,7 +151,7 @@
             app:hintTextColor="@color/text_secondary"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/text_secondary"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
@@ -175,7 +179,7 @@
             app:hintTextColor="@color/text_secondary"
             app:passwordToggleEnabled="true"
             app:passwordToggleTint="@color/text_secondary"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
@@ -201,12 +205,11 @@
 
             <CheckBox
                 android:id="@+id/cbEnableBiometric"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/register_biometric"
                 android:textColor="@color/text_secondary"
                 android:buttonTint="@color/accent_blue"
-                android:layout_marginStart="-8dp"
                 android:visibility="gone" />
 
             <TextView
@@ -220,6 +223,19 @@
                 android:visibility="gone" />
         </LinearLayout>
 
+        <!-- Register Button -->
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="@string/register_button"
+            android:textColor="@color/dark_navy"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="@color/accent_blue"
+            android:layout_marginBottom="16dp"
+            android:letterSpacing="0.05" />
+
         <!-- Progress Bar -->
         <ProgressBar
             android:id="@+id/progressBar"
@@ -229,14 +245,23 @@
             android:layout_marginBottom="16dp"
             android:indeterminateTint="@color/accent_blue" />
 
-        <!-- Login Link (touch target enlarged) -->
+        <!-- Login Link -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginBottom="16dp">
 
             <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/register_have_account"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvLogin"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/register_login"
@@ -245,6 +270,7 @@
                 android:textStyle="bold"
                 android:clickable="true"
                 android:focusable="true"
+                android:background="?attr/selectableItemBackground"
                 android:padding="12dp"
                 android:minWidth="48dp"
                 android:minHeight="48dp" />

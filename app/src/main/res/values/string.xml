@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">AuTho</string>
     <string name="app_description">Authority Total System</string>
 
     <!-- Login Screen -->
@@ -27,8 +26,9 @@
     <string name="register_biometric">Enable Fingerprint Login</string>
     <string name="register_biometric_info">Enable fingerprint for faster login</string>
     <string name="register_button">SIGN UP</string>
-    <string name="register_have_account">Already have an acoount?</string>
+    <string name="register_have_account">Already have an account?</string>
     <string name="register_login">Login</string>
+    <string name="register_back">back</string>
 
     <!-- App name (was hardcoded) -->
     <string name="app_name">AuTho</string>

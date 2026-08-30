@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.Theme.AuTho" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/dark_navy</item>
+        <item name="colorPrimaryVariant">@color/dark_gray</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/accent_blue</item>
+        <item name="colorOnSecondary">@color/dark_navy</item>
+        <item name="android:statusBarColor">@color/dark_navy</item>
+        <item name="android:windowBackground">@color/dark_navy</item>
+        <item name="android:navigationBarColor">@color/dark_navy</item>
+    </style>
+
+    <style name="Theme.AuTho" parent="Base.Theme.AuTho" />
+
+</resources>

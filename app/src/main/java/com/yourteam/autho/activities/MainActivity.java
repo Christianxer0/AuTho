@@ -1,4 +1,4 @@
-package com.yourteam.autho;
+package com.yourteam.autho.activities;
 
 import android.os.Bundle;
 import android.widget.TextView;
