@@ -49,6 +49,20 @@ dependencies {
     // Encrypted SharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 
+    //Navigation
+    implementation 'androidx.navigation:navigation-fragment:2.7.4'
+    implementation 'androidx.navigation:navigation-ui:2.7.4'
+
+    //Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
+
+    //Chart Dashboard
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    //Card view
+    implementation 'androidx.cardview:cardview:1.0.0'
+
     // Tests
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
