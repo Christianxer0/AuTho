@@ -9,12 +9,12 @@ public class NativeHelper {
     private static final String TAG = "NativeHelper";
     private static Context appContext;
 
-    static{
+    static {
         try {
-            System.loadLibrary("autho-library");
-            Log.d(TAG, "Native library loaded Successfully");
+            System.loadLibrary("native-lib");
+            Log.d(TAG, "Native library loaded successfully");
         } catch (UnsatisfiedLinkError e) {
-            Log.e(TAG, "Failed to load native Library. " + e.getMessage());
+            Log.e(TAG, "Failed to load native library: " + e.getMessage());
         }
     }
 
@@ -23,9 +23,8 @@ public class NativeHelper {
         Log.d(TAG, "NativeHelper initialized");
     }
 
-     // ========== Native Methods =========//
-
-    //System Information
+    // ==================== NATIVE METHODS ====================
+    // System Information
     public static native int getCpuUsage();
     public static native int getCpuCoreCount();
     public static native float getCpuTemperature();
@@ -34,7 +33,7 @@ public class NativeHelper {
     public static native long[] getInternalStorageInfo();
     public static native long[] getExternalStorageInfo();
 
-    //Network
+    // Network
     public static native String[] scanNetworkDevices(int timeoutMs);
     public static native int getWifiSignalStrength();
     public static native String getWifiSSID();
@@ -47,48 +46,68 @@ public class NativeHelper {
     public static native String executeRootCommand(String command);
     public static native boolean uninstallPackage(String packageName, boolean isSystemApp);
     public static native boolean restorePackage(String packageName);
-    public static native int killBackgroundProcess();
+    public static native int killBackgroundProcesses();
     public static native boolean clearSystemCache();
 
-    //Performance
+    // Performance
     public static native String[] getProcessList();
     public static native long[] getNetworkStats();
 
-    //Hardware Info
+    // Hardware Info
     public static native String getDeviceModel();
     public static native String getKernelVersion();
-    public static native long[] getScreenResolution();
+    public static native int[] getScreenResolution();
 
-    // ========== Java Helper Methods ========= //
+    // ==================== JAVA HELPER METHODS ====================
+
+    public static long[] getBatteryInfoJava() {
+        if (appContext == null) {
+            Log.e(TAG, "Context not initialized");
+            return new long[]{-1, -1, -1, -1};
+        }
+        android.os.BatteryManager bm = (android.os.BatteryManager)
+                appContext.getSystemService(Context.BATTERY_SERVICE);
+        if (bm == null) {
+            return new long[]{-1, -1, -1, -1};
+        }
+        int level = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        int status = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_STATUS);
+        int health = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_HEALTH);
+        // Temperature is in tenths of degrees Celsius
+        int temp = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
+        float tempCelsius = temp / 10.0f;
+        return new long[]{level, status, health, (long) tempCelsius};
+    }
+
     public static String getBatteryStatusString(int status) {
         switch (status) {
             case android.os.BatteryManager.BATTERY_STATUS_CHARGING:
-                return " CHARGING";
+                return "⚡ Charging";
             case android.os.BatteryManager.BATTERY_STATUS_DISCHARGING:
-                return " DISCHARGING";
+                return "🔋 Discharging";
             case android.os.BatteryManager.BATTERY_STATUS_FULL:
-                return " FULL";
+                return "✅ Full";
             case android.os.BatteryManager.BATTERY_STATUS_NOT_CHARGING:
-                return " NOT CHARGING";
+                return "⏸️ Not Charging";
             default:
-                return " UNKNOWN";
+                return "❓ Unknown";
         }
     }
 
     public static String getBatteryHealthString(int health) {
         switch (health) {
             case android.os.BatteryManager.BATTERY_HEALTH_GOOD:
-                return "GOOD";
+                return "✅ Good";
             case android.os.BatteryManager.BATTERY_HEALTH_OVERHEAT:
-                return "OVERHEATING";
+                return "🔥 Overheating";
             case android.os.BatteryManager.BATTERY_HEALTH_DEAD:
-                return "DEAD";
+                return "💀 Dead";
             case android.os.BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:
-                return " OVER VOLTAGE";
+                return "⚡ Over Voltage";
             case android.os.BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:
-                return " FAILURE";
+                return "❌ Failure";
             default:
-                return " UNKNOWN";
+                return "❓ Unknown";
         }
     }
 
@@ -114,5 +133,4 @@ public class NativeHelper {
         if (bytes < 1024L * 1024L * 1024L) return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
         return String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
     }
-
 }
