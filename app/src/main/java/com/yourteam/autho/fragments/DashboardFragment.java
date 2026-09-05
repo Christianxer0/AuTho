@@ -51,7 +51,7 @@ public class DashboardFragment extends Fragment {
         return view;
     }
 
-    private void initViews(View view) {
+    private void initViews(@NonNull View view) {
         // Welcome
         tvWelcome = view.findViewById(R.id.tvWelcome);
         tvDeviceInfo = view.findViewById(R.id.tvDeviceInfo);

@@ -1,6 +1,9 @@
 package com.yourteam.autho.utils;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.BatteryManager;
 import android.os.Environment;
 import android.os.StatFs;
 import android.util.Log;
@@ -65,18 +68,29 @@ public class NativeHelper {
             Log.e(TAG, "Context not initialized");
             return new long[]{-1, -1, -1, -1};
         }
-        android.os.BatteryManager bm = (android.os.BatteryManager)
-                appContext.getSystemService(Context.BATTERY_SERVICE);
-        if (bm == null) {
+
+        // Register a null receiver to immediately get the current sticky battery intent
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = appContext.registerReceiver(null, ifilter);
+
+        if (batteryStatus == null) {
             return new long[]{-1, -1, -1, -1};
         }
-        int level = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY);
-        int status = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_STATUS);
-        int health = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_HEALTH);
-        // Temperature is in tenths of degrees Celsius
-        int temp = bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_TEMPERATURE);
-        float tempCelsius = temp / 10.0f;
-        return new long[]{level, status, health, (long) tempCelsius};
+
+        // Calculate battery percentage
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        long batteryPct = (scale > 0) ? (level * 100L) / scale : -1;
+
+        // Get status and health
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        int health = batteryStatus.getIntExtra(BatteryManager.EXTRA_HEALTH, -1);
+
+        // Temperature is provided in tenths of a degree Celsius
+        int temp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+        long tempCelsius = (long) (temp / 10.0f);
+
+        return new long[]{batteryPct, status, health, tempCelsius};
     }
 
     public static String getBatteryStatusString(int status) {

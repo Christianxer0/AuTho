@@ -13,7 +13,7 @@ public class SecurityHelper {
 
     //Security Helper
     public SecurityHelper(Context context){
-        this.context =context;
+        this.context = context;
         this.sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 

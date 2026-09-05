@@ -1,23 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <item
         android:id="@+id/nav_dashboard"
-        android:icon="@android:drawable/ic_menu_home"
+        android:icon="@drawable/ic_home"
         android:title="Dashboard" />
+
     <item
         android:id="@+id/nav_diagnostics"
-        android:icon="@android:drawable/ic_menu_info_details"
+        android:icon="@drawable/ic_info"
         android:title="Diagnostics" />
+
     <item
         android:id="@+id/nav_wifi"
-        android:icon="@android:drawable/ic_menu_search"
+        android:icon="@drawable/ic_wifi"
         android:title="WiFi" />
+
     <item
         android:id="@+id/nav_root"
-        android:icon="@android:drawable/ic_menu_edit"
+        android:icon="@drawable/ic_terminal"
         android:title="Root" />
+
     <item
         android:id="@+id/nav_settings"
-        android:icon="@android:drawable/ic_menu_preferences"
+        android:icon="@drawable/ic_settings"
         android:title="Settings" />
+
 </menu>
