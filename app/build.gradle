@@ -1,0 +1,88 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.yourteam.autho'
+    compileSdk 35
+    ndkVersion "27.0.12077973"
+
+    defaultConfig {
+        applicationId "com.yourteam.autho"
+        minSdk 30
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+            version '3.22.1'
+        }
+    }
+}
+
+dependencies {
+    // Core UI
+    implementation 'androidx.activity:activity:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'          // replaced libs.appcompat
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4' // replaced libs.constraintlayout
+    implementation 'com.google.android.material:material:1.10.0'     // replaced libs.material
+
+    // ❌ REMOVED the placeholder: implementation 'com.github.User:Repo:Tag'
+
+    // Firebase (if you don't use it, remove this line)
+    implementation 'com.google.firebase:firebase-firestore:24.10.0'  // replaced libs.firebase.firestore
+
+    // Biometric
+    implementation 'androidx.biometric:biometric:1.1.0'
+
+    // Room
+    implementation 'androidx.room:room-runtime:2.6.0'
+    annotationProcessor 'androidx.room:room-compiler:2.6.0'
+
+    // Encrypted SharedPreferences
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+
+    // Navigation
+    implementation 'androidx.navigation:navigation-fragment:2.7.4'
+    implementation 'androidx.navigation:navigation-ui:2.7.4'
+
+    // Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
+
+    // Chart Dashboard (requires JitPack)
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    // CardView
+    implementation 'androidx.cardview:cardview:1.0.0'
+
+    // Tests
+    testImplementation 'junit:junit:4.13.2'                     // replaced libs.junit
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'   // replaced libs.ext.junit
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1' // replaced libs.espresso.core
+}
+
+
+

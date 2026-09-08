@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AuTho</string>
+    <string name="login_username_hint">Email or Username</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_button">LOGIN</string>
+    <string name="login_tagline">Welcome back</string>
+    <string name="login_remember_me">Remember Me</string>
+    <string name="login_forgot_password">Forgot Password?</string>
+    <string name="login_or">OR</string>
+    <string name="login_fingerprint">Use Fingerprint</string>
+    <string name="login_setup_biometric">Enable Fingerprint Login</string>
+    <string name="login_dont_have_account">Don\'t have an account?</string>
+    <string name="login_sign_up">Sign Up</string>
+    <string name="biometric_status_ready">Fingerprint ready</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join AuTho community</string>
+    <string name="register_back">Back</string>
+    <string name="register_username_hint">Username</string>
+    <string name="register_email_hint">Email</string>
+    <string name="register_password_hint">Password</string>
+    <string name="register_confirm_password_hint">Confirm Password</string>
+    <string name="register_pin_hint">Security PIN (4-6 digits)</string>
+    <string name="register_biometric">Enable Fingerprint Login</string>
+    <string name="register_biometric_info">Enable fingerprint for faster login</string>
+    <string name="register_button">SIGN UP</string>
+    <string name="register_have_account">Already have an account?</string>
+    <string name="register_login">Login</string>
+    <string name="app_logo_description">AuTho Logo</string>
+    <string name="back">Back</string>
+    
+</resources>
