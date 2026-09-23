@@ -2,7 +2,6 @@ package com.yourteam.autho.fragments;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,12 +16,15 @@ import androidx.fragment.app.Fragment;
 
 import com.yourteam.autho.R;
 import com.yourteam.autho.utils.NativeHelper;
+import com.yourteam.autho.utils.NativeMonitorCallback;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class DashboardFragment extends Fragment {
+public class DashboardFragment extends Fragment implements NativeMonitorCallback {
+
+    private static final int MONITOR_INTERVAL_MS = 250;   // 4 Hz = realtime feel
 
     // UI Components
     private TextView tvWelcome, tvDeviceInfo;
@@ -36,23 +38,8 @@ public class DashboardFragment extends Fragment {
     private ProgressBar progressStorage;
     private TextView tvWifiSSID, tvWifiSignal, tvWifiIP;
 
-    // Background thread for metric collection
-    private HandlerThread backgroundThread;
-    private Handler backgroundHandler;
+    // All UI updates are marshalled here — the callback fires on a native thread
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
-    private boolean isUpdating = false;
-
-    // Data holder for all metrics
-    private static class MetricsData {
-        int cpuUsage;
-        float cpuTemp;
-        long[] ramInfo;          // [total, used, free]
-        long[] batteryInfo;      // [level, status, health, temp]
-        long[] storageInfo;      // [total, used, free]
-        String wifiSSID;
-        int wifiSignal;
-        String wifiIP;
-    }
 
     @Nullable
     @Override
@@ -62,44 +49,24 @@ public class DashboardFragment extends Fragment {
         NativeHelper.init(requireContext());
         initViews(view);
         setupWelcomeMessage();
-        startMonitoring();
         return view;
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        backgroundThread = new HandlerThread("MetricsThread");
-        backgroundThread.start();
-        backgroundHandler = new Handler(backgroundThread.getLooper());
-    }
-
     private void initViews(@NonNull View view) {
-        // Welcome
         tvWelcome = view.findViewById(R.id.tvWelcome);
         tvDeviceInfo = view.findViewById(R.id.tvDeviceInfo);
-
-        // CPU
         tvCpuUsage = view.findViewById(R.id.tvCpuUsage);
         tvCpuTemp = view.findViewById(R.id.tvCpuTemp);
         progressCpu = view.findViewById(R.id.progressCpu);
-
-        // RAM
         tvRamUsage = view.findViewById(R.id.tvRamUsage);
         tvRamDetails = view.findViewById(R.id.tvRamDetails);
         progressRam = view.findViewById(R.id.progressRam);
-
-        // Battery
         tvBatteryLevel = view.findViewById(R.id.tvBatteryLevel);
         tvBatteryStatus = view.findViewById(R.id.tvBatteryStatus);
         progressBattery = view.findViewById(R.id.progressBattery);
-
-        // Storage
         tvStorageUsage = view.findViewById(R.id.tvStorageUsage);
         tvStorageDetails = view.findViewById(R.id.tvStorageDetails);
         progressStorage = view.findViewById(R.id.progressStorage);
-
-        // Network
         tvWifiSSID = view.findViewById(R.id.tvWifiSSID);
         tvWifiSignal = view.findViewById(R.id.tvWifiSignal);
         tvWifiIP = view.findViewById(R.id.tvWifiIP);
@@ -110,197 +77,116 @@ public class DashboardFragment extends Fragment {
         if (getActivity() != null && getActivity().getIntent() != null) {
             username = getActivity().getIntent().getStringExtra("username");
         }
+        tvWelcome.setText(username != null && !username.isEmpty()
+                ? "Welcome, " + username + "!" : "Welcome Back!");
 
-        if (username != null && !username.isEmpty()) {
-            tvWelcome.setText("Welcome, " + username + "!");
-        } else {
-            tvWelcome.setText("Welcome Back!");
-        }
-
-        // Device info – these are fast stubs, safe on UI thread
         String model = NativeHelper.getDeviceModel();
-        String kernel = NativeHelper.getKernelVersion();
         int cores = NativeHelper.getCpuCoreCount();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
-        String time = sdf.format(new Date());
-
+        String time = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
         tvDeviceInfo.setText(model + " · " + cores + " cores · " + time);
     }
 
-    private void startMonitoring() {
-        if (isUpdating) return;
-        isUpdating = true;
-
-        backgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!isUpdating || !isAdded()) return;
-                // Collect all data on background thread
-                final MetricsData data = collectMetrics();
-                // Update UI on main thread
-                uiHandler.post(() -> updateUI(data));
-                // Schedule next update
-                backgroundHandler.postDelayed(this, 2000);
-            }
-        });
-    }
-
-    private MetricsData collectMetrics() {
-        MetricsData data = new MetricsData();
-
-        // CPU
-        data.cpuUsage = NativeHelper.getCpuUsage();
-        data.cpuTemp = NativeHelper.getCpuTemperature();
-
-        // RAM
-        data.ramInfo = NativeHelper.getRamInfo();
-
-        // Battery – assuming getBatteryInfoJava() exists in NativeHelper
-        data.batteryInfo = NativeHelper.getBatteryInfoJava();
-
-        // Storage
-        data.storageInfo = NativeHelper.getStorageInfoJava();
-
-        // Network
-        data.wifiSSID = NativeHelper.getWifiSSID();
-        data.wifiSignal = NativeHelper.getWifiSignalStrength();
-        data.wifiIP = NativeHelper.getWifiIPAddress();
-
-        return data;
-    }
-
-    private void updateUI(MetricsData data) {
-        if (getContext() == null) return;
-
-        // ==================== CPU ====================
-        if (data.cpuUsage >= 0) {
-            tvCpuUsage.setText(data.cpuUsage + "%");
-            progressCpu.setProgress(data.cpuUsage);
-        }
-        if (data.cpuTemp > 0) {
-            tvCpuTemp.setText("Temp: " + String.format(Locale.getDefault(), "%.1f", data.cpuTemp) + "°C");
-        }
-
-        // ==================== RAM ====================
-        if (data.ramInfo != null && data.ramInfo.length >= 3) {
-            long totalRAM = data.ramInfo[0];
-            long usedRAM = data.ramInfo[1];
-            long freeRAM = data.ramInfo[2];
-            int percent = (int) ((usedRAM * 100) / totalRAM);
-
-            tvRamUsage.setText(NativeHelper.formatBytes(usedRAM));
-            tvRamDetails.setText(NativeHelper.formatBytes(usedRAM) + " / " + NativeHelper.formatBytes(totalRAM));
-            progressRam.setProgress(percent);
-        }
-
-        // ==================== Battery ====================
-        if (data.batteryInfo != null && data.batteryInfo.length >= 4) {
-            int level = (int) data.batteryInfo[0];
-            int status = (int) data.batteryInfo[1];
-            int health = (int) data.batteryInfo[2];
-            float temp = data.batteryInfo[3]; // assuming Java returns float as long? We'll treat as float.
-
-            tvBatteryLevel.setText(level + "%");
-            progressBattery.setProgress(level);
-
-            String statusText = NativeHelper.getBatteryStatusString(status);
-            String healthText = NativeHelper.getBatteryHealthString(health);
-            tvBatteryStatus.setText(statusText + " · " + healthText + " · " +
-                    String.format(Locale.getDefault(), "%.1f", temp) + "°C");
-
-            // Color based on level
-            if (level > 50) {
-                tvBatteryLevel.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_green));
-                progressBattery.setProgressTintList(ContextCompat.getColorStateList(requireContext(), R.color.status_green));
-            } else if (level > 20) {
-                tvBatteryLevel.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_yellow));
-                progressBattery.setProgressTintList(ContextCompat.getColorStateList(requireContext(), R.color.status_yellow));
-            } else {
-                tvBatteryLevel.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_red));
-                progressBattery.setProgressTintList(ContextCompat.getColorStateList(requireContext(), R.color.status_red));
-            }
-        }
-
-        // ==================== Storage ====================
-        if (data.storageInfo != null && data.storageInfo.length >= 3) {
-            long total = data.storageInfo[0];
-            long used = data.storageInfo[1];
-            long free = data.storageInfo[2];
-            int percent = (int) ((used * 100) / total);
-
-            tvStorageUsage.setText(percent + "%");
-            tvStorageDetails.setText(NativeHelper.formatBytes(used) + " / " + NativeHelper.formatBytes(total));
-            progressStorage.setProgress(percent);
-
-            if (percent > 80) {
-                tvStorageUsage.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_red));
-                progressStorage.setProgressTintList(ContextCompat.getColorStateList(requireContext(), R.color.status_red));
-            } else if (percent > 60) {
-                tvStorageUsage.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_yellow));
-                progressStorage.setProgressTintList(ContextCompat.getColorStateList(requireContext(), R.color.status_yellow));
-            } else {
-                tvStorageUsage.setTextColor(ContextCompat.getColor(requireContext(), R.color.status_green));
-                progressStorage.setProgressTintList(ContextCompat.getColorStateList(requireContext(), R.color.status_green));
-            }
-        }
-
-        // ==================== Network ====================
-        if (data.wifiSSID != null && !data.wifiSSID.isEmpty() && !data.wifiSSID.equalsIgnoreCase("<unknown ssid>")) {
-            tvWifiSSID.setText(data.wifiSSID);
-        } else {
-            tvWifiSSID.setText("Not Connected");
-        }
-
-        if (data.wifiSignal >= 0) {
-            String signalText;
-            if (data.wifiSignal > 75) signalText = "Excellent";
-            else if (data.wifiSignal > 50) signalText = "Good";
-            else if (data.wifiSignal > 25) signalText = "Fair";
-            else signalText = "Weak";
-            tvWifiSignal.setText(signalText + " (" + data.wifiSignal + "%)");
-        } else {
-            tvWifiSignal.setText("No Signal");
-        }
-
-        if (data.wifiIP != null && !data.wifiIP.isEmpty() && !data.wifiIP.equals("0.0.0.0")) {
-            tvWifiIP.setText(data.wifiIP);
-        } else {
-            tvWifiIP.setText("No IP");
-        }
-    }
+    // ==================== REALTIME MONITOR LIFECYCLE ====================
 
     @Override
     public void onResume() {
         super.onResume();
-        if (!isUpdating) {
-            startMonitoring();
-        }
+        NativeHelper.startRealtimeMonitoring(this, MONITOR_INTERVAL_MS);
     }
 
     @Override
     public void onPause() {
+        NativeHelper.stopRealtimeMonitoring();
         super.onPause();
-        isUpdating = false;
-        if (backgroundHandler != null) {
-            backgroundHandler.removeCallbacksAndMessages(null);
-        }
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        isUpdating = false;
-        if (backgroundHandler != null) {
-            backgroundHandler.removeCallbacksAndMessages(null);
-        }
-    }
+    // ==================== NATIVE CALLBACK (runs on native thread!) ====================
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (backgroundThread != null) {
-            backgroundThread.quitSafely();
+    public void onUpdate(int cpuUsage, float cpuTemp,
+                         long ramTotal, long ramUsed, long ramFree,
+                         long rxBytesPerSec, long txBytesPerSec) {
+        // MUST hop to the main thread before touching views
+        uiHandler.post(() -> renderMetrics(cpuUsage, cpuTemp,
+                ramTotal, ramUsed, ramFree, rxBytesPerSec, txBytesPerSec));
+    }
+
+    // ==================== UI RENDERING ====================
+
+    private void renderMetrics(int cpuUsage, float cpuTemp,
+                               long ramTotal, long ramUsed, long ramFree,
+                               long rxBps, long txBps) {
+        if (getContext() == null) return;
+
+        // CPU
+        if (cpuUsage >= 0) {
+            tvCpuUsage.setText(cpuUsage + "%");
+            progressCpu.setProgress(cpuUsage);
         }
+        if (cpuTemp > 0) {
+            tvCpuTemp.setText("Temp: " + String.format(Locale.getDefault(), "%.1f", cpuTemp) + "°C");
+        }
+
+        // RAM
+        if (ramTotal > 0) {
+            int percent = (int) (ramUsed * 100 / ramTotal);
+            tvRamUsage.setText(percent + "%");
+            tvRamDetails.setText(NativeHelper.formatBytes(ramUsed) + " / "
+                    + NativeHelper.formatBytes(ramTotal));
+            progressRam.setProgress(percent);
+        }
+
+        // Realtime network throughput — you can bind these to tvWifiSignal/details
+        // e.g. tvWifiSignal.setText("↓ " + NativeHelper.formatBytes(rxBps) + "/s · ↑ "
+        //                          + NativeHelper.formatBytes(txBps) + "/s");
+
+        // Battery & Storage are slow-changing: refresh them on a slower cadence
+        refreshSlowMetrics();
+    }
+
+    private long lastSlowRefresh = 0;
+    private void refreshSlowMetrics() {
+        long now = System.currentTimeMillis();
+        if (now - lastSlowRefresh < 5000) return;
+        lastSlowRefresh = now;
+
+        long[] battery = NativeHelper.getBatteryInfoJava();
+        if (battery != null && battery.length >= 4) {
+            int level = (int) battery[0];
+            int status = (int) battery[1];
+            int health = (int) battery[2];
+            float temp = battery[3];
+
+            tvBatteryLevel.setText(level + "%");
+            progressBattery.setProgress(level);
+            tvBatteryStatus.setText(
+                    NativeHelper.getBatteryStatusString(status) + " · "
+                            + NativeHelper.getBatteryHealthString(health) + " · "
+                            + String.format(Locale.getDefault(), "%.1f", temp) + "°C");
+
+            int color;
+            if (level > 50)      color = R.color.status_green;
+            else if (level > 20) color = R.color.status_yellow;
+            else                 color = R.color.status_red;
+            tvBatteryLevel.setTextColor(ContextCompat.getColor(requireContext(), color));
+            progressBattery.setProgressTintList(
+                    ContextCompat.getColorStateList(requireContext(), color));
+        }
+
+        long[] storage = NativeHelper.getStorageInfoJava();
+        if (storage != null && storage.length >= 3) {
+            long total = storage[0], used = storage[1];
+            int percent = (int) (used * 100 / total);
+            tvStorageUsage.setText(percent + "%");
+            tvStorageDetails.setText(NativeHelper.formatBytes(used) + " / "
+                    + NativeHelper.formatBytes(total));
+            progressStorage.setProgress(percent);
+        }
+
+        String ssid = NativeHelper.getWifiSSID();
+        tvWifiSSID.setText(ssid != null && !ssid.isEmpty()
+                && !ssid.equalsIgnoreCase("<unknown ssid>") ? ssid : "Not Connected");
+        String ip = NativeHelper.getWifiIPAddress();
+        tvWifiIP.setText(ip != null && !ip.equals("0.0.0.0") ? ip : "No IP");
     }
 }

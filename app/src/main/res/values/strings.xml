@@ -28,5 +28,32 @@
     <string name="register_login">Login</string>
     <string name="app_logo_description">AuTho Logo</string>
     <string name="back">Back</string>
-    
+
+
+    <string name="hardware_diagnostics_title">🔬 Hardware Diagnostics</string>
+    <string name="hardware_diagnostics_subtitle">Test your device hardware components</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_ready_pending">⏳ Ready</string>
+    <string name="btn_run">▶ Run</string>
+    <string name="btn_run_all">🔄 Run All Tests</string>
+    <string name="label_results">📊 Test Results</string>
+    <string name="text_no_tests">No tests run yet</string>
+
+    <!-- Icons and Labels -->
+    <string name="icon_lcd">🖥️</string>
+    <string name="label_lcd">LCD Display</string>
+    <string name="icon_speaker">🔊</string>
+    <string name="label_speaker">Speaker</string>
+    <string name="icon_mic">🎤</string>
+    <string name="label_mic">Microphone</string>
+    <string name="icon_camera">📸</string>
+    <string name="label_camera">Camera</string>
+    <string name="icon_sensor">📡</string>
+    <string name="label_sensor">Sensors</string>
+    <string name="icon_flash">💡</string>
+    <string name="label_flash">Flashlight</string>
+    <string name="icon_vibration">📳</string>
+    <string name="label_vibration">Vibration</string>
+
+
 </resources>

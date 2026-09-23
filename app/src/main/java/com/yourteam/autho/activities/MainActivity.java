@@ -12,6 +12,8 @@
     import com.google.android.material.navigation.NavigationBarView;
     import com.yourteam.autho.R;
     import com.yourteam.autho.fragments.DashboardFragment;
+    import com.yourteam.autho.fragments.DiagnosticsFragment;
+    import com.yourteam.autho.fragments.WifiFragment;
 
     public class MainActivity extends AppCompatActivity
             implements NavigationBarView.OnItemSelectedListener {
@@ -47,11 +49,10 @@
                 loadFragment(new DashboardFragment());
                 return true;
             } else if (id == R.id.nav_diagnostics) {
-                // Replace with DiagnosticsFragment when ready (Phase 3)
-                Toast.makeText(this, "Diagnostics coming soon", Toast.LENGTH_SHORT).show();
+                loadFragment(new DiagnosticsFragment());
                 return true;
             } else if (id == R.id.nav_wifi) {
-                Toast.makeText(this, "WiFi Scanner coming soon", Toast.LENGTH_SHORT).show();
+               loadFragment(new WifiFragment());
                 return true;
             } else if (id == R.id.nav_root) {
                 Toast.makeText(this, "Root Tools coming soon", Toast.LENGTH_SHORT).show();
