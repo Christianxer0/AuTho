@@ -140,6 +140,7 @@ public class RootFragment extends Fragment {
 
             final boolean r = rooted;
             handler.post(() -> {
+                if (!isAdded()) return;
                 progressRoot.setVisibility(View.GONE);
                 isRooted = r;
 
@@ -180,7 +181,7 @@ public class RootFragment extends Fragment {
         input.setPadding(pad, pad, pad, pad);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("🔐 Root Authentication")
+                .setTitle(" Root Authentication")
                 .setMessage("Enter your 4–6 digit security PIN to enable root tools.")
                 .setView(input)
                 .setPositiveButton("Verify", (dialog, which) -> {
@@ -194,7 +195,7 @@ public class RootFragment extends Fragment {
                     if (ok) {
                         startRootSession();
                     } else {
-                        Toast.makeText(requireContext(), "❌ Invalid PIN", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), " Invalid PIN", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Cancel", null)
@@ -212,7 +213,7 @@ public class RootFragment extends Fragment {
         tvRootDetails.setText("You can now perform system modifications.");
 
         handler.post(tickTimer);
-        Toast.makeText(requireContext(), "✅ Root access granted", Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), " Root access granted", Toast.LENGTH_SHORT).show();
     }
 
     private final Runnable tickTimer = new Runnable() {
@@ -226,8 +227,10 @@ public class RootFragment extends Fragment {
 
             if (remainingRootSeconds <= 0) {
                 endRootSession();
-                Toast.makeText(requireContext(),
-                        "Root session expired. Please re-authenticate.", Toast.LENGTH_LONG).show();
+                if (getContext() != null) {
+                    Toast.makeText(getContext(),
+                            "Root session expired. Please re-authenticate.", Toast.LENGTH_LONG).show();
+                }
                 return;
             }
             handler.postDelayed(this, 1000);
@@ -264,8 +267,8 @@ public class RootFragment extends Fragment {
         tvAppsEmpty.setText("Scanning installed apps...");
         progressRoot.setVisibility(View.VISIBLE);
 
+        PackageManager pm = requireContext().getPackageManager();
         executor.execute(() -> {
-            PackageManager pm = requireContext().getPackageManager();
             List<ApplicationInfo> installed = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
             List<AppInfo> results = new ArrayList<>();
@@ -294,6 +297,7 @@ public class RootFragment extends Fragment {
             });
 
             handler.post(() -> {
+                if (!isAdded()) return;
                 progressRoot.setVisibility(View.GONE);
                 allApps.clear();
                 allApps.addAll(results);
@@ -411,11 +415,12 @@ public class RootFragment extends Fragment {
             final boolean success = ok;
 
             handler.post(() -> {
+                if (!isAdded()) return;
                 if (success) {
                     app.isRemoved = true;
-                    tvRootStatusLine.setText(String.format("✅ Removed %s", app.appName));
+                    tvRootStatusLine.setText(String.format(" Removed %s", app.appName));
                 } else {
-                    tvRootStatusLine.setText(String.format("❌ Failed to remove %s", app.appName));
+                    tvRootStatusLine.setText(String.format(" Failed to remove %s", app.appName));
                 }
                 updateSummary();
                 renderAppList();
@@ -438,11 +443,12 @@ public class RootFragment extends Fragment {
             final boolean success = ok;
 
             handler.post(() -> {
+                if (!isAdded()) return;
                 if (success) {
                     app.isRemoved = false;
-                    tvRootStatusLine.setText(String.format("✅ Restored %s", app.appName));
+                    tvRootStatusLine.setText(String.format(" Restored %s", app.appName));
                 } else {
-                    tvRootStatusLine.setText(String.format("❌ Failed to restore %s", app.appName));
+                    tvRootStatusLine.setText(String.format(" Failed to restore %s", app.appName));
                 }
                 updateSummary();
                 renderAppList();
@@ -472,27 +478,30 @@ public class RootFragment extends Fragment {
                 switch (type) {
                     case "kill": {
                         int n = NativeHelper.killBackgroundProcesses();
-                        result = String.format("✅ Killed %d background processes", n);
+                        result = String.format(" Killed %d background processes", n);
                         break;
                     }
                     case "cache": {
                         boolean ok = NativeHelper.clearSystemCache();
-                        result = ok ? "✅ System cache cleared" : "❌ Failed to clear cache";
+                        result = ok ? " System cache cleared" : " Failed to clear cache";
                         break;
                     }
                     case "drop": {
                         String out = NativeHelper.executeRootCommand(
                                 "sync && echo 3 > /proc/sys/vm/drop_caches");
-                        result = (out != null) ? "✅ VM caches dropped" : "❌ Failed";
+                        result = (out != null) ? " VM caches dropped" : " Failed";
                         break;
                     }
                     default: result = "Unknown operation";
                 }
             } catch (Throwable t) {
-                result = "❌ Error: " + t.getMessage();
+                result = " Error: " + t.getMessage();
             }
             final String r = result;
-            handler.post(() -> tvRootStatusLine.setText(r));
+            handler.post(() -> {
+                if (!isAdded()) return;
+                tvRootStatusLine.setText(r);
+            });
         });
     }
 

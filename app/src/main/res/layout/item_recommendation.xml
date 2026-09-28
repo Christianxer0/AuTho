@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="10dp"
+    android:paddingHorizontal="8dp"
+    android:fitsSystemWindows="true"
+    tools:ignore="UnusedAttribute">
+
+    <!-- Icon -->
+    <TextView
+        android:id="@+id/itemRecIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/item_rec_icon"
+        android:textSize="18sp"
+        android:layout_marginEnd="10dp" />
+
+    <!-- Text -->
+    <TextView
+        android:id="@+id/itemRecText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="@string/item_rec_default_text"
+        android:textColor="@color/white"
+        android:textSize="13sp" />
+
+    <!-- Action button (48dp touch target) -->
+    <Button
+        android:id="@+id/itemRecAction"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:minWidth="88dp"
+        android:text="@string/item_rec_action_fix"
+        android:textSize="12sp"
+        android:backgroundTint="@color/accent_blue"
+        android:textColor="@color/dark_navy"
+        android:insetTop="0dp"
+        android:insetBottom="0dp" />
+
+</LinearLayout>

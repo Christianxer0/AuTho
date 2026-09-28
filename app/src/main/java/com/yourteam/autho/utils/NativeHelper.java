@@ -3,6 +3,7 @@ package com.yourteam.autho.utils;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.TrafficStats;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -10,6 +11,9 @@ import android.os.Environment;
 import android.os.StatFs;
 import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -309,6 +313,98 @@ public class NativeHelper {
         return new CpuInfo(usage, cores, temp);
     }
 
+    /**
+     * CPU snapshot with Java fallbacks: if the native layer reports 0% usage
+     * or no temperature (common on many devices), samples /proc/stat and
+     * /sys/class/thermal instead. Use this anywhere the dashboard did.
+     */
+    public static CpuInfo getCpuInfoAccurate() {
+        CpuInfo nativeInfo = getCpuInfo();
+        int usage = (nativeInfo.usagePercent > 0)
+                ? nativeInfo.usagePercent
+                : getCpuUsageJava();
+        float temp = (nativeInfo.temperatureC > 0)
+                ? nativeInfo.temperatureC
+                : getCpuTempJava();
+        int cores = (nativeInfo.coreCount > 0)
+                ? nativeInfo.coreCount
+                : Runtime.getRuntime().availableProcessors();
+        return new CpuInfo(usage, cores, temp);
+    }
+
+    // ---- Java CPU fallbacks ----
+
+    private static long[] lastCpuStats; // {idle, total} from /proc/stat
+
+    /** CPU utilization % since the previous call, or -1 on first call/failure. */
+    public static synchronized int getCpuUsageJava() {
+        long[] s = readCpuStats();
+        if (s == null) return -1;
+        if (lastCpuStats == null) {
+            lastCpuStats = s;
+            return -1;
+        }
+        long dIdle = s[0] - lastCpuStats[0];
+        long dTotal = s[1] - lastCpuStats[1];
+        lastCpuStats = s;
+        if (dTotal <= 0) return -1;
+        long used = dTotal - dIdle;
+        return (int) Math.min(100, used * 100 / dTotal);
+    }
+
+    private static long[] readCpuStats() {
+        try (BufferedReader br = new BufferedReader(new FileReader("/proc/stat"))) {
+            String line = br.readLine();
+            if (line == null || !line.startsWith("cpu ")) return null;
+            String[] parts = line.trim().split("\\s+");
+            long total = 0, idle = 0;
+            for (int i = 1; i < parts.length; i++) {
+                long v = Long.parseLong(parts[i]);
+                total += v;
+                if (i == 4 || i == 5) idle += v; // idle + iowait
+            }
+            return new long[]{idle, total};
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** Best-effort CPU temperature in °C from thermal zones; -1 if unavailable. */
+    public static float getCpuTempJava() {
+        File dir = new File("/sys/class/thermal");
+        File[] zones = dir.listFiles((d, name) -> name.startsWith("thermal_zone"));
+        if (zones == null) return -1;
+
+        File best = null;
+        for (File zone : zones) {
+            String type = readSmallFile(new File(zone, "type"));
+            if (type == null) continue;
+            String t = type.toLowerCase(java.util.Locale.US);
+            if (t.contains("cpu") || t.contains("soc") || t.contains("pkg")) {
+                best = zone;
+                break;
+            }
+            if (best == null) best = zone; // first zone as fallback
+        }
+        if (best == null) return -1;
+        String raw = readSmallFile(new File(best, "temp"));
+        if (raw == null) return -1;
+        try {
+            float v = Float.parseFloat(raw.trim());
+            return v > 1000 ? v / 1000f : v; // most zones report millidegree
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private static String readSmallFile(File f) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            return br.readLine();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /** Complete RAM snapshot with structured result. */
     public static RamInfo getRamInfoJava() {
         long[] raw = getRamInfo();
@@ -351,16 +447,21 @@ public class NativeHelper {
      * Uses the native stub if available, otherwise falls back to Android APIs.
      */
     public static long[] getBatteryInfoJava() {
+        // Prefer Android APIs — the native stub is known to return placeholder
+        // values (see its declaration), so it is only used as a last resort.
+        BatteryInfo info = getBatteryInfoDetailed();
+        if (info.levelPercent >= 0) {
+            long plugged = info.isCharging ? 1 : 0;
+            long tempTenths = (info.temperatureC >= 0) ? (long) (info.temperatureC * 10) : -1;
+            return new long[]{ info.levelPercent, info.status, info.health, plugged, tempTenths, info.voltageMv };
+        }
         int[] raw = getBatteryInfo();
         if (raw != null && raw.length >= 6) {
             long[] out = new long[6];
             for (int i = 0; i < 6; i++) out[i] = raw[i];
             return out;
         }
-        BatteryInfo info = getBatteryInfoDetailed();
-        long plugged = info.isCharging ? 1 : 0;
-        long tempTenths = (info.temperatureC >= 0) ? (long) (info.temperatureC * 10) : -1;
-        return new long[]{ info.levelPercent, info.status, info.health, plugged, tempTenths, info.voltageMv };
+        return new long[]{ -1, -1, -1, -1, -1, -1 };
     }
 
     /** Internal storage snapshot. */
@@ -529,13 +630,50 @@ public class NativeHelper {
         return new WifiInfoDetailed(ssid, signal, ip, gw, linkSpeed, rssi);
     }
 
-    /** Network counters from /proc/net/dev. */
+    /** Network counters: native /proc/net/dev with TrafficStats fallback. */
     public static NetworkStats getNetworkStatsJava() {
         long[] raw = getNetworkStats();
-        if (raw == null || raw.length < 2) {
-            return new NetworkStats(0, 0, 0, 0);
+        if (raw == null || raw.length < 2 || (raw[0] == 0 && raw[1] == 0)) {
+            long rx = 0, tx = 0;
+            try {
+                rx = TrafficStats.getTotalRxBytes();
+                tx = TrafficStats.getTotalTxBytes();
+            } catch (Exception ignored) { }
+            return new NetworkStats(rx, tx, 0, 0);
         }
         return new NetworkStats(raw[0], raw[1], 0, 0);
+    }
+
+    // ---- Java throughput sampler (TrafficStats delta between calls) ----
+
+    private static long netLastRx = -1, netLastTx, netLastTime;
+
+    /**
+     * Returns [rxBytesPerSec, txBytesPerSec] since the previous call.
+     * First call returns {0, 0} (no delta yet). Call at a fixed interval.
+     */
+    public static synchronized long[] sampleNetworkThroughput() {
+        long now = System.currentTimeMillis();
+        long rx, tx;
+        try {
+            rx = TrafficStats.getTotalRxBytes();
+            tx = TrafficStats.getTotalTxBytes();
+        } catch (Exception e) {
+            return new long[]{0, 0};
+        }
+        if (netLastRx < 0 || now <= netLastTime) {
+            netLastRx = rx;
+            netLastTx = tx;
+            netLastTime = now;
+            return new long[]{0, 0};
+        }
+        long dtMs = now - netLastTime;
+        long rxBps = Math.max(0, (rx - netLastRx) * 1000 / dtMs);
+        long txBps = Math.max(0, (tx - netLastTx) * 1000 / dtMs);
+        netLastRx = rx;
+        netLastTx = tx;
+        netLastTime = now;
+        return new long[]{rxBps, txBps};
     }
 
     /** Ping with result wrapper. */

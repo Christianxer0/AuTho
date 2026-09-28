@@ -1,20 +1,25 @@
-<!--
-  ~ Copyright (C) 2026 The Android Open Source Project
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~      http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:height="24dp" android:tint="#000000" android:viewportHeight="960" android:viewportWidth="960" android:width="24dp">
-      
-    <path android:fillColor="@android:color/white" android:pathData="M240,520L240,440L720,440L720,520L240,520Z"/>
-    
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48"
+    android:tint="#FFFFFF">
+
+    <!-- Shield: pointy top, curved bottom (protection/superuser) -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineJoin="round"
+        android:pathData="M24,4 L40,10 L40,24 C40,34 33,41 24,44 C15,41 8,34 8,24 L8,10 Z" />
+
+    <!-- Hash symbol (#): two verticals + two horizontals -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:strokeLineCap="round" android:pathData="M19,16 L17,32" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:strokeLineCap="round" android:pathData="M29,16 L27,32" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:strokeLineCap="round" android:pathData="M15,21 L31,21" />
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="3"
+        android:strokeLineCap="round" android:pathData="M14,27 L30,27" />
+
 </vector>

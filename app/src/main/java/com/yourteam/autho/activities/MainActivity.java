@@ -15,6 +15,7 @@
     import com.yourteam.autho.fragments.DiagnosticsFragment;
     import com.yourteam.autho.fragments.WifiFragment;
     import com.yourteam.autho.fragments.RootFragment;
+    import com.yourteam.autho.fragments.SecurityFragment;
 
     public class MainActivity extends AppCompatActivity
             implements NavigationBarView.OnItemSelectedListener {
@@ -58,8 +59,8 @@
             } else if (id == R.id.nav_root) {
                 loadFragment(new RootFragment());
                 return true;
-            } else if (id == R.id.nav_settings) {
-                Toast.makeText(this, "Settings coming soon", Toast.LENGTH_SHORT).show();
+            } else if (id == R.id.nav_security) {
+                loadFragment(new SecurityFragment());
                 return true;
             }
             return false;

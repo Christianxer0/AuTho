@@ -55,5 +55,67 @@
     <string name="icon_vibration">📳</string>
     <string name="label_vibration">Vibration</string>
 
+    <!-- Item: Recommendation row -->
+    <string name="item_rec_icon">💡</string>
+    <string name="item_rec_default_text">Recommendation</string>
+    <string name="item_rec_action_fix">Fix</string>
+
+    <!-- ==================================================== -->
+    <!-- SECURITY CENTER (Phase 6) -->
+    <!-- ==================================================== -->
+    <string name="sec_title">🛡️ Security Center</string>
+    <string name="sec_subtitle">Monitor and protect your device</string>
+    <string name="sec_checking">CHECKING…</string>
+    <string name="sec_please_wait">Please wait…</string>
+    <string name="sec_score_placeholder">--/100</string>
+    <string name="sec_last_scan_never">Last Scan: Never</string>
+    <string name="sec_run_full_scan">🔄 Run Full Security Scan</string>
+
+    <string name="sec_root_protection">Root Protection</string>
+    <string name="sec_not_checked">Not checked</string>
+    <string name="sec_btn_check">Check</string>
+
+    <string name="sec_app_permissions">App Permissions</string>
+    <string name="sec_btn_audit">Audit</string>
+    <string name="sec_permission_summary_default">Tap Audit to scan risky permissions</string>
+
+    <string name="sec_malware_scan">Malware Scan</string>
+    <string name="sec_btn_scan">Scan</string>
+    <string name="sec_malware_default">Tap Scan to check for threats</string>
+
+    <string name="sec_privacy_control">Privacy Control</string>
+    <string name="sec_btn_manage">Manage</string>
+    <string name="sec_privacy_level_default">Privacy Level: --</string>
+    <string name="sec_privacy_details_default">Tap Manage for privacy settings</string>
+
+    <string name="sec_recent_logs">📋 Recent Security Logs</string>
+    <string name="sec_no_logs">No logs yet</string>
+    <string name="sec_recommendations">💡 Security Recommendations</string>
+    <string name="sec_no_recommendations">No recommendations</string>
+    <string name="sec_status_default"></string>
+
+    <!-- ==================================================== -->
+    <!-- ITEM ROWS -->
+    <!-- ==================================================== -->
+    <!-- item_recommendation.xml -->
+
+
+    <!-- item_threat.xml -->
+    <string name="item_threat_default_name">Threat Name</string>
+    <string name="item_threat_default_details">Details</string>
+    <string name="item_threat_action_fix">Fix</string>
+
+    <!-- item_log.xml -->
+    <string name="item_log_default_title">Event</string>
+    <string name="item_log_default_time">Just now</string>
+
+    <!-- item_app.xml -->
+    <string name="item_app_default_name">App Name</string>
+    <string name="item_app_default_package">com.example.app</string>
+    <string name="item_app_action_remove">Remove</string>
+    <string name="item_app_action_restore">Restore</string>
+    <string name="item_app_tag_safe">Safe</string>
+    <string name="item_app_tag_protected">Protected</string>
+
 
 </resources>
