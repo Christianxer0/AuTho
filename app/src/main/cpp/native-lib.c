@@ -57,6 +57,20 @@ static long long nowMs() {
 
 static int clampInt(int v, int lo, int hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
+// MemAvailable (kernel 3.14+) reflects truly usable memory; sysinfo's
+// freeram counts only completely untouched pages, which makes RAM usage
+// look like ~97% on modern devices. Returns -1 if unavailable.
+static long readMemAvailableBytes() {
+    FILE* f = fopen("/proc/meminfo", "r");
+    if (!f) return -1;
+    char line[256]; long avail = -1;
+    while (fgets(line, sizeof(line), f)) {
+        if (sscanf(line, "MemAvailable: %ld kB", &avail) == 1) break;
+    }
+    fclose(f);
+    return avail > 0 ? avail * 1024 : -1;
+}
+
 // write a string to a sysfs node, with optional root fallback
 static int writeSysfs(const char* path, const char* value) {
     int fd = open(path, O_WRONLY);
@@ -133,13 +147,37 @@ static int readCpuUsage(long* prevTotal, long* prevIdle) {
     return usage;
 }
 
+// Scan thermal zones for a cpu/soc/pkg-labelled zone; fall back to the
+// first readable zone. thermal_zone0 is NOT necessarily the CPU zone,
+// and on many devices it is unreadable (SELinux) — hence the sweep.
 static float readCpuTemperature() {
-    FILE* f = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-    if (!f) return -1.0f;
-    int temp;
-    if (fscanf(f, "%d", &temp) != 1) { fclose(f); return -1.0f; }
-    fclose(f);
-    return temp / 1000.0f;
+    const char* base = "/sys/class/thermal";
+    char path[256], typePath[256], type[64];
+    float firstOk = -1.0f;
+
+    for (int i = 0; i < 32; i++) {
+        snprintf(typePath, sizeof(typePath), "%s/thermal_zone%d/type", base, i);
+        FILE* f = fopen(typePath, "r");
+        if (!f) continue;
+        if (!fgets(type, sizeof(type), f)) { fclose(f); continue; }
+        fclose(f);
+
+        snprintf(path, sizeof(path), "%s/thermal_zone%d/temp", base, i);
+        f = fopen(path, "r");
+        if (!f) continue;
+        int temp;
+        int ok = (fscanf(f, "%d", &temp) == 1);
+        fclose(f);
+        if (!ok) continue;
+
+        float celsius = temp / 1000.0f;
+        if (celsius < -30.0f || celsius > 150.0f) continue; // bogus reading
+
+        if (firstOk < 0) firstOk = celsius;                 // first plausible zone
+        if (strstr(type, "cpu") || strstr(type, "soc") || strstr(type, "pkg"))
+            return celsius;                                 // exact match wins
+    }
+    return firstOk;
 }
 
 static void readNetworkCounters(long* rx, long* tx) {
@@ -152,7 +190,8 @@ static void readNetworkCounters(long* rx, long* tx) {
     fgets(line, sizeof(line), f);
     while (fgets(line, sizeof(line), f)) {
         if (sscanf(line, "%s %ld %*d %*d %*d %*d %*d %*d %ld", iface, &r, &t) == 3) {
-            if (strstr(iface, "wlan") || strstr(iface, "eth") || strstr(iface, "rmnet")) {
+            if (strstr(iface, "wlan") || strstr(iface, "eth") ||
+                strstr(iface, "rmnet") || strstr(iface, "ccmni")) {
                 *rx += r;
                 *tx += t;
             }
@@ -193,8 +232,10 @@ static void* monitorLoop(void* arg) {
         long totalRam = 0, usedRam = 0, freeRam = 0;
         if (sysinfo(&info) == 0) {
             totalRam = (long)info.totalram * info.mem_unit;
-            freeRam  = (long)info.freeram  * info.mem_unit;
+            long avail = readMemAvailableBytes();
+            freeRam  = (avail >= 0) ? avail : (long)info.freeram * info.mem_unit;
             usedRam  = totalRam - freeRam;
+            if (usedRam < 0) usedRam = 0;
         }
 
         // realtime network throughput = delta since last tick
@@ -317,18 +358,8 @@ Java_com_yourteam_autho_utils_NativeHelper_getCpuCoreCount(JNIEnv *env, jclass c
 
 JNIEXPORT jfloat JNICALL
 Java_com_yourteam_autho_utils_NativeHelper_getCpuTemperature(JNIEnv *env, jclass clazz) {
-    FILE* tempFile = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-    if(!tempFile){
-        LOGE("Failed to open thermal zone");
-        return -1.0f;
-    }
-    int temp;
-    if(fscanf(tempFile, "%d", &temp) != 1) {
-        fclose(tempFile);
-        return -1.0f;
-    }
-    fclose(tempFile);
-    float celsius = temp / 1000.0f;
+    float celsius = readCpuTemperature();
+    if (celsius < 0) LOGE("No readable CPU thermal zone found");
     LOGD("CPU temp: %.1f C", celsius);
     return celsius;
 }
@@ -346,8 +377,10 @@ Java_com_yourteam_autho_utils_NativeHelper_getRamInfo(JNIEnv *env, jclass clazz)
     }
 
     long totalRam = info.totalram * info.mem_unit;
-    long freeRam = info.freeram * info.mem_unit;
+    long avail = readMemAvailableBytes();
+    long freeRam = (avail >= 0) ? avail : info.freeram * info.mem_unit;
     long usedRam = totalRam - freeRam;
+    if (usedRam < 0) usedRam = 0;
 
     jlongArray result = (*env)->NewLongArray(env, 3);
     if(!result) return NULL;
@@ -365,9 +398,13 @@ Java_com_yourteam_autho_utils_NativeHelper_getRamInfo(JNIEnv *env, jclass clazz)
 
 JNIEXPORT jintArray JNICALL
 Java_com_yourteam_autho_utils_NativeHelper_getBatteryInfo(JNIEnv *env, jclass clazz) {
+    // Native code cannot receive the sticky BATTERY_CHANGED broadcast, so
+    // real battery data is impossible here. Return "unknown" (-1) values;
+    // NativeHelper.getBatteryInfoDetailed() (Java sticky broadcast) is the
+    // authoritative source and now takes precedence in getBatteryInfoJava().
     jintArray result = (*env)->NewIntArray(env, 6);
     if(!result) return NULL;
-    jint values[6] = {75, 2, 1, 0, 37, 4200};
+    jint values[6] = {-1, -1, -1, -1, -1, -1};
     (*env)->SetIntArrayRegion(env, result, 0, 6, values);
     return result;
 }
@@ -425,52 +462,60 @@ Java_com_yourteam_autho_utils_NativeHelper_getExternalStorageInfo(JNIEnv *env, j
 JNIEXPORT jobjectArray JNICALL
 Java_com_yourteam_autho_utils_NativeHelper_scanNetworkDevices(JNIEnv *env, jclass clazz,
                                                               jint timeout_ms) {
-    LOGD("Scanning network devices (timeout: %d ms)", timeout_ms);
+    LOGD("Scanning network devices via ARP table");
 
-    char ipPrefix[16] = "192.168.1.";
+    // The old implementation pinged all 254 hosts SEQUENTIALLY with
+    // system("ping") — minutes of blocking I/O and fake MAC addresses.
+    // The kernel's ARP cache lists devices the phone has recently talked
+    // to, with real MACs, and reads in milliseconds.
+    char ifaceName[16] = "wlan0";
+    FILE* routeFile = fopen("/proc/net/route", "r");
+    if (routeFile) {
+        char line[256], iface[16]; unsigned int dest, gw;
+        while (fgets(line, sizeof(line), routeFile)) {
+            if (sscanf(line, "%15s %x %x", iface, &dest, &gw) == 3 && dest == 0) {
+                strncpy(ifaceName, iface, sizeof(ifaceName) - 1);
+                ifaceName[sizeof(ifaceName) - 1] = '\0';
+                break;
+            }
+        }
+        fclose(routeFile);
+    }
 
-    struct ifaddrs *ifaddr, *ifa;
-    if(getifaddrs(&ifaddr) == 0) {
-        for(ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-            if(ifa->ifa_addr == NULL) continue;
-            // FIX: added parentheses so the interface check applies to both
-            if(ifa->ifa_addr->sa_family == AF_INET &&
-               (strcmp(ifa->ifa_name, "wlan0") == 0 ||
-                strcmp(ifa->ifa_name, "eth0")  == 0)) {
-                struct sockaddr_in* addr = (struct sockaddr_in*)ifa->ifa_addr;
-                char ip[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &addr->sin_addr, ip, sizeof(ip));
+    char foundIp[254][INET_ADDRSTRLEN];
+    char foundMac[254][18];
+    int foundCount = 0;
 
-                char* lastDot = strrchr(ip, '.');
-                if(lastDot) {
-                    int len = lastDot - ip + 1;
-                    strncpy(ipPrefix, ip, len);
-                    ipPrefix[len] = '\0';
-                    break;
+    FILE* arp = fopen("/proc/net/arp", "r");
+    if (arp) {
+        char line[256];
+        if (fgets(line, sizeof(line), arp)) {   // skip header
+            char ip[16], hwType[8], flags[8], mac[18], mask[16], dev[16];
+            while (fgets(line, sizeof(line), arp) && foundCount < 254) {
+                if (sscanf(line, "%15s %7s %7s %17s %15s %15s",
+                           ip, hwType, flags, mac, mask, dev) == 6) {
+                    if (strcmp(dev, ifaceName) != 0) continue;
+                    if (strcmp(mac, "00:00:00:00:00:00") == 0) continue; // incomplete entry
+                    if (strcmp(ip, "0.0.0.0") == 0) continue;
+                    strncpy(foundIp[foundCount], ip, INET_ADDRSTRLEN - 1);
+                    foundIp[foundCount][INET_ADDRSTRLEN - 1] = '\0';
+                    strncpy(foundMac[foundCount], mac, 17);
+                    foundMac[foundCount][17] = '\0';
+                    foundCount++;
                 }
             }
         }
-        freeifaddrs(ifaddr);
+        fclose(arp);
     }
 
-    int foundCount = 0;
     char* devices[254];
-
-    for(int i = 1; i <= 254 && foundCount < 254; i++) {
-        char ip[50];
-        snprintf(ip, sizeof(ip), "%s%d", ipPrefix, i);
-
-        char cmd[100];
-        snprintf(cmd, sizeof(cmd), "ping -c 1 -W %d %s > /dev/null 2>&1", timeout_ms/1000, ip);
-        int result = system(cmd);
-        if (result == 0) {
-            char entry[128];
-            snprintf(entry, sizeof(entry), "%s|00:00:00:00:00:00|Device-%d|Unknown", ip, i);
-            devices[foundCount] = (char*)malloc(strlen(entry)+1);
-            strcpy(devices[foundCount], entry);
-            foundCount++;
-            LOGD("Found device: %s", ip);
-        }
+    for (int i = 0; i < foundCount; i++) {
+        char entry[128];
+        snprintf(entry, sizeof(entry), "%s|%s|Device-%d|LAN",
+                 foundIp[i], foundMac[i], i + 1);
+        devices[i] = (char*)malloc(strlen(entry) + 1);
+        strcpy(devices[i], entry);
+        LOGD("Found device: %s (%s)", foundIp[i], foundMac[i]);
     }
 
     jclass stringClass = (*env)->FindClass(env, "java/lang/String");
@@ -478,7 +523,7 @@ Java_com_yourteam_autho_utils_NativeHelper_scanNetworkDevices(JNIEnv *env, jclas
     for (int i = 0; i < foundCount; i++) {
         jstring str = (*env)->NewStringUTF(env, devices[i]);
         (*env)->SetObjectArrayElement(env, resultArray, i, str);
-        (*env)->DeleteLocalRef(env, str);   // FIX: release local refs
+        (*env)->DeleteLocalRef(env, str);
         free(devices[i]);
     }
 
@@ -498,12 +543,16 @@ Java_com_yourteam_autho_utils_NativeHelper_getWifiSignalStrength(JNIEnv *env, jc
     int strength = -1;
     while(fgets(line, sizeof(line), wifiFile)) {
         if(strstr(line, "wlan") != NULL) {
-            char iface[10];
-            int status, quality, signal, noise;
-            sscanf(line, "%s %d %d %d %d", iface, &status, &quality, &signal, &noise);
-            strength = (int)(100.0f * (signal + 100) / 100);
-            if(strength < 0) strength = 0;
-            if(strength > 100) strength = 100;
+            // /proc/net/wireless prints values like "70." and "-50." —
+            // %d stops at the '.', so tokenize and use atoi instead.
+            char iface[32], status[16], quality[16], signal[16], noise[16];
+            if (sscanf(line, "%31s %15s %15s %15s %15s",
+                       iface, status, quality, signal, noise) == 5) {
+                int dbm = atoi(signal);
+                if (dbm != 0) {
+                    strength = clampInt((int)(100.0f * (dbm + 100) / 100), 0, 100);
+                }
+            }
             break;
         }
     }
@@ -514,7 +563,10 @@ Java_com_yourteam_autho_utils_NativeHelper_getWifiSignalStrength(JNIEnv *env, jc
 
 JNIEXPORT jstring JNICALL
 Java_com_yourteam_autho_utils_NativeHelper_getWifiSSID(JNIEnv *env, jclass clazz) {
-    return (*env)->NewStringUTF(env, "WiFi_Network");
+    // There is no native API for SSID; reading it requires WifiManager
+    // (and the ACCESS_WIFI_STATE permission). Return empty so the Java
+    // layer substitutes the real SSID in getWifiInfoDetailed().
+    return (*env)->NewStringUTF(env, "");
 }
 
 JNIEXPORT jstring JNICALL
@@ -885,7 +937,7 @@ Java_com_yourteam_autho_utils_NativeHelper_testDisplay(JNIEnv* env, jclass clazz
             default: r = g = b = 255; break;
         }
         if (vinfo.bits_per_pixel == 32) {
-            fb[i]     = b;  // most Android fb are BGRA/XBGR
+            fb[i]     = b;
             fb[i + 1] = g;
             fb[i + 2] = r;
             fb[i + 3] = 255;

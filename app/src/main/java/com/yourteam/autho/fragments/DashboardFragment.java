@@ -204,10 +204,13 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
             progressStorage.setProgress(percent);
         }
 
-        String ssid = NativeHelper.getWifiSSID();
+        // WifiInfoDetailed substitutes the real SSID/signal when the native
+        // layer returns placeholders (native SSID is now empty by design).
+        NativeHelper.WifiInfoDetailed wifi = NativeHelper.getWifiInfoDetailed();
+        String ssid = wifi.ssid;
         tvWifiSSID.setText(ssid != null && !ssid.isEmpty()
                 && !ssid.equalsIgnoreCase("<unknown ssid>") ? ssid : "Not Connected");
-        String ip = NativeHelper.getWifiIPAddress();
+        String ip = wifi.ipAddress;
         tvWifiIP.setText(ip != null && !ip.equals("0.0.0.0") ? ip : "No IP");
     }
 
