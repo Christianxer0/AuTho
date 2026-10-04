@@ -117,5 +117,32 @@
     <string name="item_app_tag_safe">Safe</string>
     <string name="item_app_tag_protected">Protected</string>
 
+    <string name="root_title">🔧 Root Tools</string>
+    <string name="root_subtitle">Advanced system access &amp; bloatware management</string>
+    <string name="root_status_checking">Checking root…</string>
+    <string name="root_please_wait">Please wait…</string>
+    <string name="root_btn_auth">Authenticate Root Access</string>
+    <string name="root_btn_logout">End Root Session</string>
+    <string name="root_session_active">Root Session Active</string>
+
+    <string name="root_bloatware_scanner">📦 Bloatware Scanner</string>
+    <string name="root_btn_scan_apps">🔄 Scan Apps</string>
+    <string name="root_total">Total</string>
+    <string name="root_safe">Safe</string>
+    <string name="root_removed">Removed</string>
+    <string name="root_filter_all">All</string>
+    <string name="root_filter_bloat">Bloatware</string>
+    <string name="root_filter_removed">Removed</string>
+    <string name="root_scan_prompt">Tap \'Scan Apps\' to detect bloatware</string>
+
+    <string name="root_system_optimization">⚙️ System Optimization</string>
+    <string name="root_btn_run">Run</string>
+    <string name="root_opt_kill">Kill Background Processes</string>
+    <string name="root_opt_kill_desc">Stop background apps to free RAM</string>
+    <string name="root_opt_cache">Clear System Cache</string>
+    <string name="root_opt_cache_desc">Remove cached files from system</string>
+    <string name="root_opt_drop">Drop VM Caches</string>
+    <string name="root_opt_drop_desc">Release kernel page cache memory</string>
+
 
 </resources>

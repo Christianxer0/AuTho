@@ -10,3 +10,20 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+# Keep native method signatures
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# Keep NativeHelper (exact names required for JNI binding)
+-keep class com.yourteam.autho.utils.NativeHelper { *; }
+
+# Keep NativeMonitorCallback
+-keep interface com.yourteam.autho.utils.NativeMonitorCallback { *; }
+
+# Keep model & helper classes accessed by reflection
+-keep class com.yourteam.autho.models.AppInfo { *; }
+-keep class com.yourteam.autho.utils.BloatwareDetector { *; }
+
+-repackageclasses ''
+-allowaccessmodification

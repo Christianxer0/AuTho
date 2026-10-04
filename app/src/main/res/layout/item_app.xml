@@ -56,11 +56,14 @@
         <Button
             android:id="@+id/itemAppAction"
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
+            android:layout_height="48dp"
+            android:minWidth="88dp"
             android:text="Remove"
             android:textSize="11sp"
             android:backgroundTint="@color/status_red"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"
+            android:insetTop="0dp"
+            android:insetBottom="0dp" />
     </LinearLayout>
 
     <View

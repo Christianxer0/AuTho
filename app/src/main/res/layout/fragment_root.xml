@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dark_navy"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <!-- Title -->
+        <!-- HEADER -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🔧 Root Tools"
+            android:text="@string/root_title"
             android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="@color/white"
@@ -24,18 +26,16 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Advanced system access &amp; bloatware management"
+            android:text="@string/root_subtitle"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="16dp" />
 
-        <!-- ============================================================ -->
         <!-- ROOT STATUS CARD -->
-        <!-- ============================================================ -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
+            app:cardCornerRadius="14dp"
             app:cardBackgroundColor="@color/dark_gray"
             app:cardElevation="4dp"
             android:layout_marginBottom="16dp">
@@ -57,8 +57,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="🔒"
-                        android:textSize="32sp"
-                        android:layout_marginEnd="12dp" />
+                        android:textSize="34sp"
+                        android:layout_marginEnd="12dp"
+                        tools:ignore="HardcodedText" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -70,8 +71,8 @@
                             android:id="@+id/tvRootStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Checking root..."
-                            android:textSize="16sp"
+                            android:text="@string/root_status_checking"
+                            android:textSize="17sp"
                             android:textStyle="bold"
                             android:textColor="@color/white" />
 
@@ -79,7 +80,7 @@
                             android:id="@+id/tvRootDetails"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Please wait..."
+                            android:text="@string/root_please_wait"
                             android:textSize="12sp"
                             android:textColor="@color/text_secondary"
                             android:layout_marginTop="2dp" />
@@ -93,77 +94,139 @@
                         android:indeterminateTint="@color/accent_blue" />
                 </LinearLayout>
 
-                <!-- Root Session Timer -->
+                <!-- Root Solution Badge -->
                 <LinearLayout
-                    android:id="@+id/llRootSession"
-                    android:layout_width="match_parent"
+                    android:id="@+id/llRootBadge"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
                     android:visibility="gone"
-                    android:layout_marginTop="12dp"
-                    android:background="@color/dark_navy"
-                    android:padding="8dp">
+                    android:background="@drawable/badge_background"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="6dp"
+                    android:layout_marginTop="12dp">
 
                     <TextView
+                        android:id="@+id/tvRootBadgeIcon"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="⏱️ Session: "
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                    <TextView
-                        android:id="@+id/tvSessionTimer"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="5:00"
-                        android:textColor="@color/status_green"
+                        android:text="⚙️"
                         android:textSize="14sp"
-                        android:textStyle="bold" />
+                        tools:ignore="HardcodedText" />
+
+                    <TextView
+                        android:id="@+id/tvRootBadgeText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="KernelSU"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/accent_blue"
+                        android:layout_marginStart="6dp"
+                        tools:ignore="HardcodedText" />
                 </LinearLayout>
 
-                <!-- Auth Button -->
+                <!-- Session Timer Card -->
+                <LinearLayout
+                    android:id="@+id/llRootSession"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:background="@drawable/session_background"
+                    android:padding="12dp"
+                    android:layout_marginTop="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="⏱️"
+                            android:textSize="18sp"
+                            tools:ignore="HardcodedText" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/root_session_active"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginStart="8dp" />
+
+                        <TextView
+                            android:id="@+id/tvSessionTimer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5:00"
+                            android:textColor="@color/status_green"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:fontFamily="monospace"
+                            tools:ignore="HardcodedText" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressSession"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="6dp"
+                        android:layout_marginTop="8dp"
+                        android:max="300"
+                        android:progress="300"
+                        android:progressTint="@color/status_green"
+                        android:progressBackgroundTint="@color/divider_dark" />
+                </LinearLayout>
+
                 <Button
                     android:id="@+id/btnAuthRoot"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:text="🔓 Authenticate Root Access"
+                    android:layout_height="52dp"
+                    android:text="@string/root_btn_auth"
                     android:textSize="14sp"
                     android:textStyle="bold"
                     android:backgroundTint="@color/accent_blue"
                     android:textColor="@color/dark_navy"
-                    android:layout_marginTop="12dp"
-                    android:visibility="gone" />
+                    android:layout_marginTop="14dp"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_lock"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/dark_navy" />
 
                 <Button
                     android:id="@+id/btnLogoutRoot"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:text="🔒 End Root Session"
-                    android:textSize="14sp"
+                    android:text="@string/root_btn_logout"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
                     android:backgroundTint="@color/status_red"
                     android:textColor="@color/white"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="14dp"
                     android:visibility="gone" />
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- ============================================================ -->
-        <!-- BLOATWARE SCANNER -->
-        <!-- ============================================================ -->
+        <!-- BLOATWARE SCANNER HEADER -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="📦 Bloatware Scanner"
+                android:text="@string/root_bloatware_scanner"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@color/white" />
@@ -171,27 +234,31 @@
             <Button
                 android:id="@+id/btnScanApps"
                 android:layout_width="wrap_content"
-                android:layout_height="36dp"
-                android:text="🔄 Scan Apps"
+                android:layout_height="40dp"
+                android:minWidth="110dp"
+                android:text="@string/root_btn_scan_apps"
                 android:textSize="12sp"
                 android:backgroundTint="@color/accent_blue"
-                android:textColor="@color/dark_navy" />
+                android:textColor="@color/dark_navy"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
         </LinearLayout>
 
-        <!-- Summary -->
+        <!-- Summary Stats Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardCornerRadius="12dp"
             app:cardBackgroundColor="@color/dark_gray"
             app:cardElevation="4dp"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="10dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="12dp">
+                android:paddingVertical="14dp"
+                android:paddingHorizontal="8dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -205,17 +272,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="22sp"
                         android:textStyle="bold"
-                        android:textColor="@color/white" />
+                        android:textColor="@color/white"
+                        tools:ignore="HardcodedText" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Total"
+                        android:text="@string/root_total"
                         android:textSize="11sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/divider_dark" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -229,17 +303,24 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="22sp"
                         android:textStyle="bold"
-                        android:textColor="@color/status_green" />
+                        android:textColor="@color/status_green"
+                        tools:ignore="HardcodedText" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Safe"
+                        android:text="@string/root_safe"
                         android:textSize="11sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/divider_dark" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -253,16 +334,18 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="0"
-                        android:textSize="20sp"
+                        android:textSize="22sp"
                         android:textStyle="bold"
-                        android:textColor="@color/status_yellow" />
+                        android:textColor="@color/status_yellow"
+                        tools:ignore="HardcodedText" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Removed"
+                        android:text="@string/root_removed"
                         android:textSize="11sp"
-                        android:textColor="@color/text_secondary" />
+                        android:textColor="@color/text_secondary"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -272,39 +355,48 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="10dp">
 
             <Button
                 android:id="@+id/btnFilterAll"
                 android:layout_width="0dp"
-                android:layout_height="36dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:text="All"
-                android:textSize="11sp"
+                android:text="@string/root_filter_all"
+                android:textSize="12sp"
+                android:textStyle="bold"
                 android:backgroundTint="@color/accent_blue"
                 android:textColor="@color/dark_navy"
-                android:layout_marginEnd="4dp" />
+                android:layout_marginEnd="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
 
             <Button
                 android:id="@+id/btnFilterBloat"
                 android:layout_width="0dp"
-                android:layout_height="36dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:text="Bloatware"
-                android:textSize="11sp"
+                android:text="@string/root_filter_bloat"
+                android:textSize="12sp"
+                android:textStyle="bold"
                 android:backgroundTint="@color/dark_gray"
                 android:textColor="@color/accent_blue"
-                android:layout_marginEnd="4dp" />
+                android:layout_marginEnd="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
 
             <Button
                 android:id="@+id/btnFilterRemoved"
                 android:layout_width="0dp"
-                android:layout_height="36dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:text="Removed"
-                android:textSize="11sp"
+                android:text="@string/root_filter_removed"
+                android:textSize="12sp"
+                android:textStyle="bold"
                 android:backgroundTint="@color/dark_gray"
-                android:textColor="@color/accent_blue" />
+                android:textColor="@color/accent_blue"
+                android:insetTop="0dp"
+                android:insetBottom="0dp" />
         </LinearLayout>
 
         <!-- App List Container -->
@@ -314,38 +406,36 @@
             app:cardCornerRadius="12dp"
             app:cardBackgroundColor="@color/dark_gray"
             app:cardElevation="4dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="20dp">
 
             <LinearLayout
                 android:id="@+id/llApps"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="8dp">
 
                 <TextView
                     android:id="@+id/tvAppsEmpty"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Tap 'Scan Apps' to detect bloatware"
+                    android:text="@string/root_scan_prompt"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     android:gravity="center"
-                    android:padding="16dp" />
+                    android:padding="20dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- ============================================================ -->
         <!-- SYSTEM OPTIMIZATION -->
-        <!-- ============================================================ -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="⚙️ System Optimization"
+            android:text="@string/root_system_optimization"
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/white"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="10dp" />
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
@@ -359,32 +449,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="8dp">
 
-                <!-- Kill background -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="8dp">
+                    android:padding="12dp">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🛑"
+                        android:textSize="22sp"
+                        android:layout_marginEnd="12dp"
+                        tools:ignore="HardcodedText" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="🛑 Kill Background Processes"
-                        android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/root_opt_kill"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/root_opt_kill_desc"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
 
                     <Button
                         android:id="@+id/btnKillProcesses"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:text="Run"
+                        android:layout_height="40dp"
+                        android:minWidth="72dp"
+                        android:text="@string/root_btn_run"
                         android:textSize="12sp"
                         android:backgroundTint="@color/accent_blue"
-                        android:textColor="@color/dark_navy" />
+                        android:textColor="@color/dark_navy"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp" />
                 </LinearLayout>
 
                 <View
@@ -392,30 +507,55 @@
                     android:layout_height="1dp"
                     android:background="@color/divider_dark" />
 
-                <!-- Clear cache -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="8dp">
+                    android:padding="12dp">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🧹"
+                        android:textSize="22sp"
+                        android:layout_marginEnd="12dp"
+                        tools:ignore="HardcodedText" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="🧹 Clear System Cache"
-                        android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/root_opt_cache"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/root_opt_cache_desc"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
 
                     <Button
                         android:id="@+id/btnClearCache"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:text="Run"
+                        android:layout_height="40dp"
+                        android:minWidth="72dp"
+                        android:text="@string/root_btn_run"
                         android:textSize="12sp"
                         android:backgroundTint="@color/accent_blue"
-                        android:textColor="@color/dark_navy" />
+                        android:textColor="@color/dark_navy"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp" />
                 </LinearLayout>
 
                 <View
@@ -423,32 +563,56 @@
                     android:layout_height="1dp"
                     android:background="@color/divider_dark" />
 
-                <!-- Drop VM caches -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingVertical="8dp">
+                    android:padding="12dp">
 
                     <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="💾"
+                        android:textSize="22sp"
+                        android:layout_marginEnd="12dp"
+                        tools:ignore="HardcodedText" />
+
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="💾 Drop VM Caches"
-                        android:textColor="@color/white"
-                        android:textSize="14sp" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/root_opt_drop"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/root_opt_drop_desc"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
 
                     <Button
                         android:id="@+id/btnDropCaches"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
-                        android:text="Run"
+                        android:layout_height="40dp"
+                        android:minWidth="72dp"
+                        android:text="@string/root_btn_run"
                         android:textSize="12sp"
                         android:backgroundTint="@color/accent_blue"
-                        android:textColor="@color/dark_navy" />
+                        android:textColor="@color/dark_navy"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp" />
                 </LinearLayout>
-
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -461,7 +625,10 @@
             android:textColor="@color/accent_blue"
             android:textSize="13sp"
             android:gravity="center"
-            android:layout_marginBottom="16dp" />
+            android:padding="12dp"
+            android:background="@drawable/status_background"
+            android:layout_marginBottom="16dp"
+            tools:ignore="HardcodedText" />
 
         <View
             android:layout_width="match_parent"

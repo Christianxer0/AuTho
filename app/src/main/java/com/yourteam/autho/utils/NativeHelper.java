@@ -69,7 +69,7 @@ public class NativeHelper {
     public static native boolean pingDevice(String ipAddress, int timeoutMs);
     public static native long[] getNetworkStats();      // [rxBytes, txBytes, speedPlaceholder]
 
-    // --- Root ---
+    // --- Root Detection natives---
     public static native boolean isDeviceRooted();
     public static native String executeRootCommand(String command);
     public static native boolean uninstallPackage(String packageName, boolean isSystemApp);
@@ -98,9 +98,30 @@ public class NativeHelper {
     private static native boolean startNativeMonitor(NativeMonitorCallback callback, int intervalMs);
     private static native void stopNativeMonitor();
 
+    //Root session natives
+    public static native void nativeStartRootSession(int durationSeconds);
+    public static native void nativeEndRootSession();
+    public static native boolean nativeIsRootSessionActive();
+    public static native int nativeGetRemainingSeconds();
+    public static native boolean isKernelSUDetected();
+    public static native boolean isKernelSUInstalled();
+    public static native boolean isMagiskDetected();
+    public static native boolean isMagiskInstalled();
+    public static native boolean isAPatchInstalled();
+    public static native boolean isSuperSUInstalled();
+
+
+
+    // Java-side root solution detection
+    private static final String KSU_PACKAGE      = "me.weishu.kernelsu";
+    private static final String MAGISK_PACKAGE   = "com.topjohnwu.magisk";
+    private static final String APATCH_PACKAGE   = "me.bmax.apatch";
+    private static final String SUPERSU_PACKAGE  = "eu.chainfire.supersu";
+
     // ============================================================
     // DATA CLASSES
     // ============================================================
+
 
     public static class CpuInfo {
         public final int usagePercent;      // 0..100, -1 if error
@@ -814,6 +835,22 @@ public class NativeHelper {
     public static boolean isMonitorRunning() {
         return monitorRunning;
     }
+
+    public static String getRootSolution() {
+        if (isKernelSUInstalled() || isKernelSUDetected()) return "KernelSU";
+        if (isMagiskInstalled()   || isMagiskDetected())   return "Magisk";
+        if (isAPatchInstalled())                           return "APatch";
+        if (isSuperSUInstalled())                          return "SuperSU";
+        if (isDeviceRooted())                              return "Other Root";
+        return "None";
+    }
+
+
+    public static void startRootSession(int seconds) { nativeStartRootSession(seconds); }
+    public static void endRootSession()              { nativeEndRootSession(); }
+    public static boolean isRootSessionActive()      { return nativeIsRootSessionActive(); }
+    public static int  getRemainingSeconds()         { return nativeGetRemainingSeconds(); }
+
 
     // ============================================================
     // HARDWARE DIAGNOSTICS - JAVA HELPER METHODS

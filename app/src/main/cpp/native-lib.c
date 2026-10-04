@@ -670,44 +670,7 @@ Java_com_yourteam_autho_utils_NativeHelper_isDeviceRooted(JNIEnv *env, jclass cl
     return JNI_FALSE;
 }
 
-JNIEXPORT jstring JNICALL
-Java_com_yourteam_autho_utils_NativeHelper_executeRootCommand(JNIEnv *env, jclass clazz,
-                                                              jstring command) {
-    const char* cmd = (*env)->GetStringUTFChars(env, command, NULL);
-    char fullCmd[512];
-    snprintf(fullCmd, sizeof(fullCmd), "su -c '%s' 2>&1", cmd);
-    FILE* pipe = popen(fullCmd, "r");
-    if (!pipe) {
-        LOGE("popen failed");
-        (*env)->ReleaseStringUTFChars(env, command, cmd);
-        return (*env)->NewStringUTF(env, "");
-    }
-    char buffer[256];
-    char result[4096] = "";
-    while (fgets(buffer, sizeof(buffer), pipe)) {
-        strncat(result, buffer, sizeof(result)-strlen(result)-1);
-    }
-    pclose(pipe);
-    (*env)->ReleaseStringUTFChars(env, command, cmd);
-    return (*env)->NewStringUTF(env, result);
-}
 
-JNIEXPORT jboolean JNICALL
-Java_com_yourteam_autho_utils_NativeHelper_uninstallPackage(JNIEnv *env, jclass clazz,
-                                                            jstring package_name,
-                                                            jboolean is_system_app) {
-    const char* pkg = (*env)->GetStringUTFChars(env, package_name, NULL);
-    char cmd[256];
-    if (is_system_app) {
-        snprintf(cmd, sizeof(cmd), "su -c 'pm uninstall -k --user 0 %s'", pkg);
-    } else {
-        snprintf(cmd, sizeof(cmd), "su -c 'pm uninstall %s'", pkg);
-    }
-    int result = system(cmd);
-    (*env)->ReleaseStringUTFChars(env, package_name, pkg);
-    LOGD("Uninstall %s: %s", pkg, result == 0 ? "SUCCESS" : "FAILED");
-    return result == 0 ? JNI_TRUE : JNI_FALSE;
-}
 
 JNIEXPORT jboolean JNICALL
 Java_com_yourteam_autho_utils_NativeHelper_restorePackage(JNIEnv *env, jclass clazz,
@@ -718,20 +681,6 @@ Java_com_yourteam_autho_utils_NativeHelper_restorePackage(JNIEnv *env, jclass cl
     int result = system(cmd);
     (*env)->ReleaseStringUTFChars(env, package_name, pkg);
     LOGD("Restore %s: %s", pkg, result == 0 ? "SUCCESS" : "FAILED");
-    return result == 0 ? JNI_TRUE : JNI_FALSE;
-}
-
-JNIEXPORT jint JNICALL
-Java_com_yourteam_autho_utils_NativeHelper_killBackgroundProcesses(JNIEnv *env, jclass clazz) {
-    system("su -c 'am kill-all'");
-    LOGD("Killed background processes");
-    return 1;
-}
-
-JNIEXPORT jboolean JNICALL
-Java_com_yourteam_autho_utils_NativeHelper_clearSystemCache(JNIEnv *env, jclass clazz) {
-    int result = system("su -c 'sync && echo 3 > /proc/sys/vm/drop_caches'");
-    LOGD("Clear system cache: %s", result == 0 ? "SUCCESS" : "FAILED");
     return result == 0 ? JNI_TRUE : JNI_FALSE;
 }
 
@@ -1395,3 +1344,244 @@ Java_com_yourteam_autho_utils_NativeHelper_testFlashlight(JNIEnv* env, jclass cl
     LOGE("testFlashlight: no writable LED node found");
     return JNI_FALSE;
 }
+
+
+// ============================================================
+// ROOT SOLUTION DETECTION
+// ============================================================
+
+static int isPackageInstalled(const char* packageName) {
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "pm path %s 2>/dev/null", packageName);
+    FILE* fp = popen(cmd, "r");
+    if(!fp) return 0;
+    char buf[256];
+    int found = 0;
+    if(!fgets(buf, sizeof(buf), fp) && strstr(buf, "package:")) {
+        found = 1;
+    }
+    pclose(fp);
+    return found;
+}
+
+static int anyPathExists(const char** paths) {
+    for(int i = 0; paths[i] != NULL; i++) {
+        if(access(paths[i], F_OK) == 0 ) return 1;
+    }
+    return 0;
+}
+
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_isKernelSUDetected(
+        JNIEnv* env, jclass clazz) {
+    FILE* fp = popen("ps -A 2>/dev/null | grep -w ksud", "r");
+    if (fp) {
+        char buf[128];
+        if (fgets(buf, sizeof(buf), fp)) { pclose(fp); return JNI_TRUE; }
+        pclose(fp);
+    }
+    const char* paths[] = {
+            "/data/adb/ksu", "/data/adb/ksud", "/data/adb/ksu/bin/ksud", NULL
+    };
+    for (int i = 0; paths[i] != NULL; i++)
+        if (access(paths[i], F_OK) == 0) return JNI_TRUE;
+    return JNI_FALSE;
+}
+
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_isKernelSUInstalled(
+        JNIEnv* env, jclass clazz) {
+    // KernelSU manager app
+    if (isPackageInstalled("me.weishu.kernelsu")) return JNI_TRUE;
+    // KernelSU leaves its module dir behind even if the daemon is gone
+    const char* paths[] = {
+            "/data/adb/ksu", "/data/adb/ksud", "/data/adb/ksu/modules", NULL
+    };
+    return anyPathExists(paths) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_isMagiskDetected(
+        JNIEnv* env, jclass clazz) {
+    FILE* fp = popen("ps -A 2>/dev/null | grep -w magiskd", "r");
+    if (fp) {
+        char buf[128];
+        if (fgets(buf, sizeof(buf), fp)) { pclose(fp); return JNI_TRUE; }
+        pclose(fp);
+    }
+    const char* paths[] = {
+            "/sbin/.magisk", "/data/adb/magisk", "/data/adb/magisk.db", NULL
+    };
+    for (int i = 0; paths[i] != NULL; i++)
+        if (access(paths[i], F_OK) == 0) return JNI_TRUE;
+    return JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_isMagiskInstalled(
+        JNIEnv* env, jclass clazz) {
+    if (isPackageInstalled("com.topjohnwu.magisk")) return JNI_TRUE;
+    const char* paths[] = {
+            "/data/adb/magisk", "/data/adb/magisk.db",
+            "/sbin/.magisk", "/cache/.magisk", NULL
+    };
+    return anyPathExists(paths) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_isAPatchInstalled(
+        JNIEnv* env, jclass clazz) {
+    if (isPackageInstalled("me.bmax.apatch")) return JNI_TRUE;
+    const char* paths[] = {
+            "/data/adb/ap", "/data/adb/apd", NULL
+    };
+    return anyPathExists(paths) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_isSuperSUInstalled(
+        JNIEnv* env, jclass clazz) {
+    if (isPackageInstalled("eu.chainfire.supersu")) return JNI_TRUE;
+    const char* paths[] = {
+            "/system/app/Superuser.apk", "/system/app/SuperSU",
+            "/system/xbin/daemonsu", "/su/bin/su", NULL
+    };
+    return anyPathExists(paths) ? JNI_TRUE : JNI_FALSE;
+}
+
+
+
+// ============================================================
+// ROOT SESSION STATE (native, tamper-resistant)
+// ============================================================
+static int64_t  g_rootSessionStart = 0;
+static int64_t g_rootSessionDuration = 0;
+static volatile int g_rootSessionActive = 0;
+
+
+JNIEXPORT void JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_nativeStartRootSession(JNIEnv *env, jclass clazz,
+                                                                  jint duration_seconds) {
+    g_rootSessionStart = (int64_t) time(NULL);
+    g_rootSessionDuration = (int64_t)duration_seconds;
+    g_rootSessionActive = 1;
+}
+
+JNIEXPORT void JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_nativeEndRootSession(JNIEnv *env, jclass clazz) {
+    g_rootSessionActive = 0;
+    g_rootSessionStart = 0;
+    g_rootSessionDuration = 0;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_nativeIsRootSessionActive(JNIEnv *env, jclass clazz) {
+    if (!g_rootSessionActive) return JNI_FALSE;
+    int64_t now = (int64_t)time(NULL);
+    int64_t elapsed = now - g_rootSessionStart;
+    if (elapsed < 0) { g_rootSessionActive = 0; return JNI_FALSE; }
+    if (elapsed >= g_rootSessionDuration) { g_rootSessionActive = 0; return JNI_FALSE; }
+    return JNI_TRUE;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_nativeGetRemainingSeconds(JNIEnv *env, jclass clazz) {
+    if (!g_rootSessionActive) return 0;
+    int64_t now = (int64_t)time(NULL);
+    int64_t rem = g_rootSessionDuration - (now - g_rootSessionStart);
+    return rem < 0 ? 0 : (jint)rem;
+}
+
+// ============================================================
+// GUARDED ROOT OPERATIONS
+// ============================================================
+
+ static int rootSessionValid() {
+    if(!g_rootSessionActive) return 0;
+    int64_t now = (int64_t)time(NULL);
+    if((now - g_rootSessionStart) >= g_rootSessionDuration) {
+        g_rootSessionActive = 0;
+        return 0;
+    }
+    return 1;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_executeRootCommand(
+        JNIEnv* env, jclass clazz, jstring command) {
+    if (!rootSessionValid())
+        return (*env)->NewStringUTF(env, "ERROR: No active root session");
+
+    const char* cmd = (*env)->GetStringUTFChars(env, command, NULL);
+    if (!cmd) return NULL;
+
+    char fullCmd[512];
+    snprintf(fullCmd, sizeof(fullCmd), "timeout 5 su -c '%s' 2>&1", cmd);
+
+    FILE* pipe = popen(fullCmd, "r");
+    if (!pipe) {
+        (*env)->ReleaseStringUTFChars(env, command, cmd);
+        return (*env)->NewStringUTF(env, "");
+    }
+
+    char buffer[256];
+    char result[4096] = "";
+    size_t used = 0;
+    while (fgets(buffer, sizeof(buffer), pipe)) {
+        size_t n = strlen(buffer);
+        if (used + n >= sizeof(result) - 1) break;
+        strncat(result, buffer, sizeof(result) - used - 1);
+        used += n;
+    }
+    pclose(pipe);
+    (*env)->ReleaseStringUTFChars(env, command, cmd);
+    return (*env)->NewStringUTF(env, result);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_uninstallPackage(
+        JNIEnv* env, jclass clazz, jstring packageName, jboolean isSystemApp) {
+    if (!rootSessionValid()) return JNI_FALSE;
+
+    const char* pkg = (*env)->GetStringUTFChars(env, packageName, NULL);
+    char cmd[256];
+    if (isSystemApp)
+        snprintf(cmd, sizeof(cmd), "su -c 'pm uninstall -k --user 0 %s'", pkg);
+    else
+        snprintf(cmd, sizeof(cmd), "su -c 'pm uninstall %s'", pkg);
+
+    int result = system(cmd);
+    (*env)->ReleaseStringUTFChars(env, packageName, pkg);
+    return (result == 0) ? JNI_TRUE : JNI_FALSE;
+}
+
+
+JNIEXPORT jint JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_killBackgroundProcesses(
+        JNIEnv* env, jclass clazz) {
+    if (!rootSessionValid()) return 0;
+
+    int before = 0, after = 0;
+    FILE* f = popen("ps -A | wc -l", "r");
+    if (f) { fscanf(f, "%d", &before); pclose(f); }
+
+    system("su -c 'am kill-all' 2>/dev/null");
+
+    f = popen("ps -A | wc -l", "r");
+    if (f) { fscanf(f, "%d", &after); pclose(f); }
+
+    int killed = before - after;
+    return killed < 0 ? 0 : killed;
+}
+
+
+JNIEXPORT jboolean JNICALL
+Java_com_yourteam_autho_utils_NativeHelper_clearSystemCache(
+        JNIEnv* env, jclass clazz) {
+    if (!rootSessionValid()) return JNI_FALSE;
+    int result = system("su -c 'sync && echo 3 > /proc/sys/vm/drop_caches'");
+    return (result == 0) ? JNI_TRUE : JNI_FALSE;
+}
+
