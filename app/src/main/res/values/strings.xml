@@ -144,5 +144,35 @@
     <string name="root_opt_drop">Drop VM Caches</string>
     <string name="root_opt_drop_desc">Release kernel page cache memory</string>
 
+    <!-- Forgot Password -->
+    <string name="forgot_title">Forgot Password?</string>
+    <string name="forgot_subtitle_step1">Enter your username or email to continue</string>
+    <string name="forgot_subtitle_step2">Enter your Security PIN to verify your identity</string>
+    <string name="forgot_subtitle_step3">Set a new password for your account</string>
+
+    <string name="forgot_username_hint">Username or Email</string>
+    <string name="forgot_btn_continue">Continue</string>
+    <string name="forgot_btn_back">Back</string>
+    <string name="forgot_btn_verify">Verify PIN</string>
+    <string name="forgot_btn_reset">Reset Password</string>
+
+    <string name="forgot_pin_hint">Security PIN (4-6 digits)</string>
+    <string name="forgot_new_password_hint">New Password</string>
+    <string name="forgot_confirm_password_hint">Confirm New Password</string>
+
+    <string name="forgot_account_found">✓ Account found</string>
+    <string name="forgot_pin_help">Your Security PIN is the 4-6 digit code you set during registration.</string>
+    <string name="forgot_password_rules">Password must be 8+ characters with uppercase, lowercase, number, and special character.</string>
+
+    <!-- Error messages -->
+    <string name="forgot_error_empty">Please enter your username or email</string>
+    <string name="forgot_error_not_found">No account found with that username or email</string>
+    <string name="forgot_error_empty_pin">Please enter your Security PIN</string>
+    <string name="forgot_error_wrong_pin">Incorrect PIN. Please try again.</string>
+    <string name="forgot_error_empty_password">Please enter a new password</string>
+    <string name="forgot_error_weak_password">Password must be 8+ chars with uppercase, lowercase, number, and special character</string>
+    <string name="forgot_error_mismatch">Passwords do not match</string>
+    <string name="forgot_success">Password reset successful! Please log in with your new password.</string>
+
 
 </resources>

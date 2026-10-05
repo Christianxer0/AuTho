@@ -161,8 +161,8 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         tvForgetPassword.setOnClickListener(v -> {
-            Toast.makeText(this,
-                    "Password reset coming soon", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(LoginActivity.this, ForgotPasswordActivity.class);
+            startActivity(intent);
         });
 
         tvSignUp.setOnClickListener(v -> {

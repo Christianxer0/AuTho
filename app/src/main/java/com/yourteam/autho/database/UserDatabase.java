@@ -253,6 +253,44 @@ public class UserDatabase extends SQLiteOpenHelper{
         db.close();
     }
 
+    /**
+     * Check if a user exists by username or email
+     * @return user id if found, -1 not found
+     */
 
+    public int findUserByIdentifier(String usernameOrEmail) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT " + COLUMN_ID + " FROM " + TABLE_USERS +
+                " WHERE " + COLUMN_USERNAME + " = ? OR " + COLUMN_EMAIL + "= ?";
+        Cursor cursor = db.rawQuery(query, new String[]{usernameOrEmail, usernameOrEmail});
+        int userId = -1;
+        if(cursor.moveToFirst()) {
+            userId = cursor.getInt(0);
+        }
+        cursor.close();
+        db.close();
+        return userId;
+    }
+
+    /**
+     * Reset a user's password without requiring the old password.
+     * Requires the caller to have verified the user's PIN first.
+     * @return true if success
+     */
+
+    public boolean resetPassword(int userId, String newPassword) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String newSalt = generateSalt();
+        String newHash = hashPassword(newPassword, newSalt);
+
+        ContentValues content = new ContentValues();
+        content.put(COLUMN_PIN_HASH, newHash);
+        content.put(COLUMN_SALT, newSalt);
+
+        int rows = db.update(TABLE_USERS, content,
+                COLUMN_ID + " = ?", new String[]{String.valueOf(userId)});
+        db.close();
+        return rows > 0;
+    }
 }
 
