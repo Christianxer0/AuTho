@@ -12,13 +12,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;                             // ✅ NEW
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;                  // ✅ NEW
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.yourteam.autho.R;
+import com.yourteam.autho.activities.MainActivity;         // ✅ NEW
 import com.yourteam.autho.utils.NativeHelper;
 import com.yourteam.autho.utils.NativeMonitorCallback;
 
@@ -45,6 +48,14 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
     private TextView tvStorageUsage, tvStorageDetails;
     private ProgressBar progressStorage;
     private TextView tvWifiSSID, tvWifiSignal, tvWifiIP;
+
+    // ✅ NEW — Quick Access Cards
+    private CardView cardWifiScanner;
+    private CardView cardDiagnostics;
+    private CardView cardRootTools;
+    private CardView cardSecurityCenter;
+    private CardView cardBatteryBooster;
+    private CardView cardCacheCleaner;
 
     // All UI updates are marshalled here — the callback fires on a native thread
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
@@ -74,6 +85,7 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         cpuCores = NativeHelper.getCpuCoreCount();
         initViews(view);
         setupWelcomeMessage();
+        setupQuickAccess();                    // ✅ NEW
         updateDeviceInfoLine();
         return view;
     }
@@ -96,6 +108,14 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         tvWifiSSID = view.findViewById(R.id.tvWifiSSID);
         tvWifiSignal = view.findViewById(R.id.tvWifiSignal);
         tvWifiIP = view.findViewById(R.id.tvWifiIP);
+
+        //  NEW — Quick Access bindings
+        cardWifiScanner    = view.findViewById(R.id.cardWifiScanner);
+        cardDiagnostics    = view.findViewById(R.id.cardDiagnostics);
+        cardRootTools      = view.findViewById(R.id.cardRootTools);
+        cardSecurityCenter = view.findViewById(R.id.cardSecurityCenter);
+        cardBatteryBooster = view.findViewById(R.id.cardBattery);
+        cardCacheCleaner   = view.findViewById(R.id.cardCacheCleaner);
     }
 
     private void setupWelcomeMessage() {
@@ -112,6 +132,48 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         if (tvDeviceInfo == null) return;
         String time = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
         tvDeviceInfo.setText(deviceModel + " · " + cpuCores + " cores · " + time);
+    }
+
+    // ============================================================
+    // QUICK ACCESS NAVIGATION
+    // ============================================================
+
+    private void setupQuickAccess() {
+        // Real navigation tiles
+        cardWifiScanner.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToWifi();
+            }
+        });
+
+        cardDiagnostics.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToDiagnostics();
+            }
+        });
+
+        cardRootTools.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToRoot();
+            }
+        });
+
+        cardSecurityCenter.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToSecurity();
+            }
+        });
+
+        // Placeholder tiles
+        cardBatteryBooster.setOnClickListener(v ->
+                Toast.makeText(requireContext(),
+                        "🔋 Battery Booster coming soon",
+                        Toast.LENGTH_SHORT).show());
+
+        cardCacheCleaner.setOnClickListener(v ->
+                Toast.makeText(requireContext(),
+                        "🧹 Cache Cleaner coming soon",
+                        Toast.LENGTH_SHORT).show());
     }
 
     // ==================== REALTIME MONITOR LIFECYCLE ====================

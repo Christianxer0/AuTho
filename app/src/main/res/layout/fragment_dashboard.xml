@@ -35,7 +35,7 @@
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="12dp" />
 
-        <!-- System Metrics – using LinearLayout with equal row heights -->
+        <!-- System Metrics -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -377,7 +377,7 @@
             android:textColor="@color/white"
             android:layout_marginBottom="8dp" />
 
-        <!-- Quick Access Grid (two rows) -->
+        <!-- Quick Access Grid -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -390,7 +390,9 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="8dp">
 
+                <!-- WiFi Scanner -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardWifiScanner"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -428,7 +430,9 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Diagnostics Tools -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardDiagnostics"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -467,7 +471,9 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Root Tools -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardRootTools"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -512,7 +518,9 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
+                <!-- Security Center -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardSecurityCenter"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -550,7 +558,9 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Battery Booster -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardBattery"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -589,7 +599,9 @@
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
+                <!-- Cache Cleaner -->
                 <androidx.cardview.widget.CardView
+                    android:id="@+id/cardCacheCleaner"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
