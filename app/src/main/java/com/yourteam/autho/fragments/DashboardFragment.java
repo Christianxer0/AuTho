@@ -12,16 +12,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;                             // ✅ NEW
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.cardview.widget.CardView;                  // ✅ NEW
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.yourteam.autho.R;
-import com.yourteam.autho.activities.MainActivity;         // ✅ NEW
+import com.yourteam.autho.activities.MainActivity;
 import com.yourteam.autho.utils.NativeHelper;
 import com.yourteam.autho.utils.NativeMonitorCallback;
 
@@ -49,7 +49,7 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
     private ProgressBar progressStorage;
     private TextView tvWifiSSID, tvWifiSignal, tvWifiIP;
 
-    // ✅ NEW — Quick Access Cards
+    // Quick Access Cards
     private CardView cardWifiScanner;
     private CardView cardDiagnostics;
     private CardView cardRootTools;
@@ -57,15 +57,15 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
     private CardView cardBatteryBooster;
     private CardView cardCacheCleaner;
 
-    // All UI updates are marshalled here — the callback fires on a native thread
+    // Handlers / state
     private final Handler uiHandler = new Handler(Looper.getMainLooper());
 
-    // ---- Java-side fallback sampling state (accurate even if native returns junk) ----
     private long[] lastCpuStats;           // {idle, total} from /proc/stat
     private long lastRxBytes = -1, lastTxBytes = -1, lastNetSampleTime;
-    private Intent batteryStickyIntent;    // sticky ACTION_BATTERY_CHANGED
+    private Intent batteryStickyIntent;
     private String deviceModel;
     private int cpuCores;
+    private long lastSlowRefresh = 0;
 
     private final Runnable clockTick = new Runnable() {
         @Override
@@ -80,36 +80,42 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_dashboard, container, false);
+
         NativeHelper.init(requireContext());
         deviceModel = NativeHelper.getDeviceModel();
         cpuCores = NativeHelper.getCpuCoreCount();
+
         initViews(view);
         setupWelcomeMessage();
-        setupQuickAccess();                    // ✅ NEW
+        setupQuickAccess();
         updateDeviceInfoLine();
+
+        // ✅ Prime CPU stats baseline immediately so the first tick has real data
+        readCpuStats();
+
         return view;
     }
 
     private void initViews(@NonNull View view) {
-        tvWelcome = view.findViewById(R.id.tvWelcome);
-        tvDeviceInfo = view.findViewById(R.id.tvDeviceInfo);
-        tvCpuUsage = view.findViewById(R.id.tvCpuUsage);
-        tvCpuTemp = view.findViewById(R.id.tvCpuTemp);
-        progressCpu = view.findViewById(R.id.progressCpu);
-        tvRamUsage = view.findViewById(R.id.tvRamUsage);
-        tvRamDetails = view.findViewById(R.id.tvRamDetails);
-        progressRam = view.findViewById(R.id.progressRam);
-        tvBatteryLevel = view.findViewById(R.id.tvBatteryLevel);
-        tvBatteryStatus = view.findViewById(R.id.tvBatteryStatus);
-        progressBattery = view.findViewById(R.id.progressBattery);
-        tvStorageUsage = view.findViewById(R.id.tvStorageUsage);
+        tvWelcome        = view.findViewById(R.id.tvWelcome);
+        tvDeviceInfo     = view.findViewById(R.id.tvDeviceInfo);
+        tvCpuUsage       = view.findViewById(R.id.tvCpuUsage);
+        tvCpuTemp        = view.findViewById(R.id.tvCpuTemp);
+        progressCpu      = view.findViewById(R.id.progressCpu);
+        tvRamUsage       = view.findViewById(R.id.tvRamUsage);
+        tvRamDetails     = view.findViewById(R.id.tvRamDetails);
+        progressRam      = view.findViewById(R.id.progressRam);
+        tvBatteryLevel   = view.findViewById(R.id.tvBatteryLevel);
+        tvBatteryStatus  = view.findViewById(R.id.tvBatteryStatus);
+        progressBattery  = view.findViewById(R.id.progressBattery);
+        tvStorageUsage   = view.findViewById(R.id.tvStorageUsage);
         tvStorageDetails = view.findViewById(R.id.tvStorageDetails);
-        progressStorage = view.findViewById(R.id.progressStorage);
-        tvWifiSSID = view.findViewById(R.id.tvWifiSSID);
-        tvWifiSignal = view.findViewById(R.id.tvWifiSignal);
-        tvWifiIP = view.findViewById(R.id.tvWifiIP);
+        progressStorage  = view.findViewById(R.id.progressStorage);
+        tvWifiSSID       = view.findViewById(R.id.tvWifiSSID);
+        tvWifiSignal     = view.findViewById(R.id.tvWifiSignal);
+        tvWifiIP         = view.findViewById(R.id.tvWifiIP);
 
-        //  NEW — Quick Access bindings
+        // Quick Access bindings
         cardWifiScanner    = view.findViewById(R.id.cardWifiScanner);
         cardDiagnostics    = view.findViewById(R.id.cardDiagnostics);
         cardRootTools      = view.findViewById(R.id.cardRootTools);
@@ -139,32 +145,26 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
     // ============================================================
 
     private void setupQuickAccess() {
-        // Real navigation tiles
         cardWifiScanner.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
+            if (getActivity() instanceof MainActivity)
                 ((MainActivity) getActivity()).navigateToWifi();
-            }
         });
 
         cardDiagnostics.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
+            if (getActivity() instanceof MainActivity)
                 ((MainActivity) getActivity()).navigateToDiagnostics();
-            }
         });
 
         cardRootTools.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
+            if (getActivity() instanceof MainActivity)
                 ((MainActivity) getActivity()).navigateToRoot();
-            }
         });
 
         cardSecurityCenter.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
+            if (getActivity() instanceof MainActivity)
                 ((MainActivity) getActivity()).navigateToSecurity();
-            }
         });
 
-        // Placeholder tiles
         cardBatteryBooster.setOnClickListener(v ->
                 Toast.makeText(requireContext(),
                         "🔋 Battery Booster coming soon",
@@ -181,10 +181,9 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
     @Override
     public void onResume() {
         super.onResume();
-        // Sticky broadcast: no receiver leak, always reflects the latest sticky values
         IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         batteryStickyIntent = requireContext().registerReceiver(null, filter);
-        updateBatteryUI(); // show correct values immediately, not after the first tick
+        updateBatteryUI();
         uiHandler.post(clockTick);
         NativeHelper.startRealtimeMonitoring(this, MONITOR_INTERVAL_MS);
     }
@@ -203,13 +202,12 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         super.onDestroyView();
     }
 
-    // ==================== NATIVE CALLBACK (runs on native thread!) ====================
+    // ==================== NATIVE CALLBACK ====================
 
     @Override
     public void onUpdate(int cpuUsage, float cpuTemp,
                          long ramTotal, long ramUsed, long ramFree,
                          long rxBytesPerSec, long txBytesPerSec) {
-        // MUST hop to the main thread before touching views
         uiHandler.post(() -> renderMetrics(cpuUsage, cpuTemp,
                 ramTotal, ramUsed, ramFree, rxBytesPerSec, txBytesPerSec));
     }
@@ -221,18 +219,26 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
                                long rxBps, long txBps) {
         if (!isAdded() || getContext() == null) return;
 
-        // CPU — trust native only if it reports something sane; otherwise sample /proc/stat
+        // ---------- CPU USAGE ----------
         int usage = (cpuUsage > 0) ? cpuUsage : readCpuUsageJava();
-        if (usage >= 0) {
-            tvCpuUsage.setText(usage + "%");
-            progressCpu.setProgress(Math.min(100, usage));
+        if (usage < 0) {
+            readCpuStats();    // re-prime baseline
+            usage = 0;
         }
-        float temp = (cpuTemp > 0) ? cpuTemp : readCpuTempJava();
+        tvCpuUsage.setText(usage + "%");
+        progressCpu.setProgress(Math.min(100, Math.max(0, usage)));
+
+        // ---------- CPU TEMPERATURE ----------
+        float temp = cpuTemp;
+        if (temp <= 0) temp = readCpuTempJava();
+        if (temp <= 0) temp = readCpuTempMultiPath();   // ✅ NEW multi-path fallback
         if (temp > 0) {
-            tvCpuTemp.setText("Temp: " + String.format(Locale.getDefault(), "%.1f", temp) + "°C");
+            tvCpuTemp.setText(String.format(Locale.getDefault(), "Temp: %.1f°C", temp));
+        } else {
+            tvCpuTemp.setText("Temp: N/A");
         }
 
-        // RAM
+        // ---------- RAM ----------
         if (ramTotal > 0) {
             int percent = (int) (ramUsed * 100 / ramTotal);
             tvRamUsage.setText(percent + "%");
@@ -241,14 +247,13 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
             progressRam.setProgress(percent);
         }
 
-        // Realtime network throughput — TrafficStats delta (native values ignored)
+        // ---------- NETWORK ----------
         updateNetworkSpeed();
 
-        // Battery & Storage are slow-changing: refresh them on a slower cadence
+        // ---------- SLOW METRICS ----------
         refreshSlowMetrics();
     }
 
-    private long lastSlowRefresh = 0;
     private void refreshSlowMetrics() {
         long now = System.currentTimeMillis();
         if (now - lastSlowRefresh < 5000) return;
@@ -266,8 +271,6 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
             progressStorage.setProgress(percent);
         }
 
-        // WifiInfoDetailed substitutes the real SSID/signal when the native
-        // layer returns placeholders (native SSID is now empty by design).
         NativeHelper.WifiInfoDetailed wifi = NativeHelper.getWifiInfoDetailed();
         String ssid = wifi.ssid;
         tvWifiSSID.setText(ssid != null && !ssid.isEmpty()
@@ -276,15 +279,15 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         tvWifiIP.setText(ip != null && !ip.equals("0.0.0.0") ? ip : "No IP");
     }
 
-    // ==================== BATTERY (Java — reads the real sticky broadcast) ====================
+    // ==================== BATTERY ====================
 
     private void updateBatteryUI() {
         Intent bi = batteryStickyIntent;
         if (bi == null) {
-            // Fragment paused/detached: fall back to native values if available
             long[] battery = NativeHelper.getBatteryInfoJava();
             if (battery != null && battery.length >= 4) {
-                renderBattery((int) battery[0], (int) battery[1], (int) battery[2], battery[3] / 10f);
+                renderBattery((int) battery[0], (int) battery[1],
+                        (int) battery[2], battery[3] / 10f);
             }
             return;
         }
@@ -298,7 +301,7 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
                 BatteryManager.BATTERY_STATUS_UNKNOWN);
         int health = bi.getIntExtra(BatteryManager.EXTRA_HEALTH,
                 BatteryManager.BATTERY_HEALTH_UNKNOWN);
-        float tempC = bi.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10f; // stored ×10
+        float tempC = bi.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0) / 10f;
 
         renderBattery(pct, status, health, tempC);
     }
@@ -320,7 +323,7 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
                 ContextCompat.getColorStateList(requireContext(), color));
     }
 
-    // ==================== NETWORK THROUGHPUT (Java — TrafficStats delta) ====================
+    // ==================== NETWORK ====================
 
     private void updateNetworkSpeed() {
         long now = System.currentTimeMillis();
@@ -329,7 +332,7 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
             rx = TrafficStats.getTotalRxBytes();
             tx = TrafficStats.getTotalTxBytes();
         } catch (Exception e) {
-            return; // TrafficStats unsupported on this device
+            return;
         }
 
         if (lastRxBytes >= 0) {
@@ -338,8 +341,8 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
                 long rxBps = (long) ((rx - lastRxBytes) / dtSec);
                 long txBps = (long) ((tx - lastTxBytes) / dtSec);
                 if (rxBps >= 0 && txBps >= 0) {
-                    tvWifiSignal.setText("↓ " + NativeHelper.formatBytes(rxBps) + "/s · ↑ "
-                            + NativeHelper.formatBytes(txBps) + "/s");
+                    tvWifiSignal.setText("↓ " + NativeHelper.formatBytes(rxBps)
+                            + "/s · ↑ " + NativeHelper.formatBytes(txBps) + "/s");
                 }
             }
         }
@@ -348,22 +351,29 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         lastNetSampleTime = now;
     }
 
-    // ==================== CPU FALLBACKS (/proc/stat + thermal zones) ====================
+    // ==================== CPU FALLBACKS ====================
 
-    /** Returns CPU utilization % since the previous call, or -1 on the first call/failure. */
+    /**
+     * Returns CPU utilization % since the previous call.
+     * First call primes the baseline and returns 0 (not -1),
+     * so the second tick already shows real data.
+     */
     private int readCpuUsageJava() {
         long[] s = readCpuStats();
         if (s == null) return -1;
+
         if (lastCpuStats == null) {
             lastCpuStats = s;
-            return -1;
+            return 0;
         }
-        long dIdle = s[0] - lastCpuStats[0];
+
+        long dIdle  = s[0] - lastCpuStats[0];
         long dTotal = s[1] - lastCpuStats[1];
         lastCpuStats = s;
-        if (dTotal <= 0) return -1;
+
+        if (dTotal <= 0) return 0;
         long used = dTotal - dIdle;
-        return (int) Math.min(100, used * 100 / dTotal);
+        return Math.max(0, Math.min(100, (int) (used * 100 / dTotal)));
     }
 
     private long[] readCpuStats() {
@@ -383,7 +393,7 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
         }
     }
 
-    /** Best-effort CPU temperature in °C from thermal zones; -1 if unavailable. */
+    /** Best-effort CPU temperature from standard thermal zones. */
     private float readCpuTempJava() {
         File dir = new File("/sys/class/thermal");
         File[] zones = dir.listFiles((d, name) -> name.startsWith("thermal_zone"));
@@ -398,17 +408,53 @@ public class DashboardFragment extends Fragment implements NativeMonitorCallback
                 best = zone;
                 break;
             }
-            if (best == null) best = zone; // keep first as fallback
+            if (best == null) best = zone;
         }
         if (best == null) return -1;
         String raw = readSmallFile(new File(best, "temp"));
         if (raw == null) return -1;
         try {
             float v = Float.parseFloat(raw.trim());
-            return v > 1000 ? v / 1000f : v; // most zones report millidegree
+            if (v > 1000) v /= 1000f;
+            return (v > 0 && v < 150) ? v : -1;
         } catch (NumberFormatException e) {
             return -1;
         }
+    }
+
+    /**
+     * ✅ NEW — Multi-path thermal reader.
+     * Tries many OEM-specific paths (Qualcomm, MediaTek, Exynos, Unisoc, Transsion).
+     */
+    private float readCpuTempMultiPath() {
+        String[] paths = {
+                "/sys/class/thermal/thermal_zone0/temp",
+                "/sys/class/thermal/thermal_zone1/temp",
+                "/sys/class/thermal/thermal_zone2/temp",
+                "/sys/class/thermal/thermal_zone3/temp",
+                "/sys/class/thermal/thermal_zone4/temp",
+                "/sys/class/hwmon/hwmon0/temp1_input",
+                "/sys/class/hwmon/hwmon1/temp1_input",
+                "/proc/mtk_thermal/temp",
+                "/sys/devices/virtual/thermal/thermal_zone0/temp",
+                "/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
+                "/sys/devices/platform/omap/omap_temp_sensor.0/temperature"
+        };
+
+        for (String path : paths) {
+            File f = new File(path);
+            if (!f.exists() || !f.canRead()) continue;
+
+            String raw = readSmallFile(f);
+            if (raw == null) continue;
+
+            try {
+                float v = Float.parseFloat(raw.trim());
+                if (v > 1000) v /= 1000f;
+                if (v > 0 && v < 150) return v;
+            } catch (NumberFormatException ignored) { }
+        }
+        return -1;
     }
 
     @Nullable

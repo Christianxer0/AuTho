@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Color Area -->
+    <FrameLayout
+        android:id="@+id/colorArea"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Instruction at top -->
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="48dp"
+        android:text="RED"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:shadowColor="#80000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="4" />
+
+    <!-- Prompt overlay (appears after cycle) -->
+    <LinearLayout
+        android:id="@+id/promptLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Display Test Complete"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Did you see all 5 colors clearly?"
+            android:textSize="14sp"
+            android:textColor="#B0BEC5"
+            android:layout_marginBottom="24dp" />
+
+        <Button
+            android:id="@+id/btnYes"
+            android:layout_width="200dp"
+            android:layout_height="52dp"
+            android:text="✅ Yes, all clear"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="12dp" />
+
+        <Button
+            android:id="@+id/btnNo"
+            android:layout_width="200dp"
+            android:layout_height="52dp"
+            android:text="❌ No, some missing"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:backgroundTint="#EF5350"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</FrameLayout>
